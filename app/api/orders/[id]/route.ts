@@ -6,8 +6,9 @@ export async function GET(
   context: { params: { id: string } }
 ) {
   try {
+    const id = await context.params.id
     const order = await prisma.order.findUnique({
-      where: { id: context.params.id },
+      where: { id  },
       include: {
         items: {
           include: {
@@ -37,9 +38,10 @@ export async function PATCH(
   context: { params: { id: string } }
 ) {
   try {
+    const id = await context.params.id
     const data = await request.json()
     const order = await prisma.order.update({
-      where: { id: context.params.id },
+      where: { id },
       data: { status: data.status },
       include: {
         items: {

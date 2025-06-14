@@ -61,7 +61,7 @@ export default function CheckoutPage() {
           quantity: item.quantity,
           totalAmount: item.price * item.quantity,
           items: itemsToOrder,
-          ...(formData.email ? { email: formData.email } : {}),
+          ...(formData.email.length > 0 ? { email: formData.email } : {}),
         };
 
         return fetch('/api/orders', {

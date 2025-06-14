@@ -1,10 +1,7 @@
-'use client'
-
 import Link from 'next/link'
 import { CheckCircle } from 'lucide-react'
 
 export default function CheckoutSuccessPage() {
-
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center max-w-md mx-auto px-4">

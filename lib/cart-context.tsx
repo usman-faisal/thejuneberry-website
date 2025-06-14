@@ -105,22 +105,35 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     totalPrice: 0,
   });
 
-  // Load cart from localStorage on mount
+  // Load cart from cookie on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('thejuneberry-cart');
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift();
+      return null;
+    };
+
+    const savedCart = getCookie('cart');
     if (savedCart) {
       try {
-        const cartData = JSON.parse(savedCart);
+        const cartData = JSON.parse(decodeURIComponent(savedCart));
         dispatch({ type: 'LOAD_CART', payload: cartData });
       } catch (error) {
-        console.error('Error loading cart from localStorage:', error);
+        console.error('Error loading cart from cookie:', error);
       }
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to cookie whenever it changes
   useEffect(() => {
-    localStorage.setItem('thejuneberry-cart', JSON.stringify(state.items));
+    const setCookie = (name: string, value: string, days = 7) => {
+      const expires = new Date();
+      expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+      document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/`;
+    };
+
+    setCookie('cart', JSON.stringify(state.items));
   }, [state.items]);
 
   return (

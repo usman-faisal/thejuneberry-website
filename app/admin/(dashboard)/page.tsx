@@ -1,48 +1,40 @@
-'use client'
+import { getLives } from '@/app/actions/lives'
+import { getOrders } from '@/app/actions/orders'
+import { Play, ShoppingBag, Package } from 'lucide-react'
 
-import { useEffect, useState } from 'react'
-import { Play, ShoppingBag, Package, TrendingUp } from 'lucide-react'
+async function getStats() {
+  try {
+    const [lives, orders] = await Promise.all([
+      getLives(),
+      getOrders(),
+    ])
 
-export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    totalLives: 0,
-    totalArticles: 0,
-    totalOrders: 0,
-    recentOrders: []
-  })
-
-  useEffect(() => {
-    fetchStats()
-  }, [])
-
-  const fetchStats = async () => {
-    try {
-      // Fetch basic stats
-      const [livesRes, articlesRes, ordersRes] = await Promise.all([
-        fetch('/api/lives'),
-        fetch('/api/articles'),
-        fetch('/api/orders')
-      ])
-
-      const [lives, articles, orders] = await Promise.all([
-        livesRes.json(),
-        articlesRes.json(),
-        ordersRes.json()
-      ])
-
-      setStats({
-        totalLives: lives.length,
-        totalArticles: articles.length,
-        totalOrders: orders.length,
-        recentOrders: orders.slice(0, 5)
-      })
-    } catch (error) {
-      console.error('Error fetching stats:', error)
+    // Check if any of the responses contain an error
+    if ('error' in lives || 'error' in orders) {
+      throw new Error('API request failed')
+    }
+    console.log(orders)
+    return {
+      totalLives: Array.isArray(lives.lives) ? lives.lives.length : 0,
+      totalOrders: Array.isArray(orders.orders) ? orders.orders.length : 0,
+      recentOrders: Array.isArray(orders.orders) ? orders.orders.slice(0, 5) : []
+    }
+  } catch (error) {
+    console.error('Error fetching stats:', error)
+    return {
+      totalLives: 0,
+      totalArticles: 0,
+      totalOrders: 0,
+      recentOrders: []
     }
   }
+}
+
+export default async function AdminDashboard() {
+  const stats = await getStats()
 
   return (
-    <div >
+    <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
 
       {/* Stats Grid */}

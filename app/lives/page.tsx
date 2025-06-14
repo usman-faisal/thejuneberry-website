@@ -1,40 +1,17 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Calendar, Play } from 'lucide-react'
-import { Prisma } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
 
-export default function LivesPage() {
-  const [lives, setLives] = useState<Prisma.LiveGetPayload<
-    {include: { articles: true } }
-  >[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchLives()
-  }, [])
-
-  const fetchLives = async () => {
-    try {
-      const response = await fetch('/api/lives')
-      const data = await response.json()
-      setLives(data)
-    } catch (error) {
-      console.error('Error fetching lives:', error)
-    } finally {
-      setLoading(false)
+export default async function LivesPage() {
+  const lives = await prisma.live.findMany({
+    include: {
+      articles: true
+    },
+    orderBy: {
+      date: 'desc'
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pink-600"></div>
-      </div>
-    )
-  }
+  })
 
   return (
     <div className="min-h-screen py-12">

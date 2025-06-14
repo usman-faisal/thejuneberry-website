@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Calendar, Play } from 'lucide-react'
 import { Prisma } from '@prisma/client'
+import Image from 'next/image'
 
 export default function LivesPage() {
   const [lives, setLives] = useState<Prisma.LiveGetPayload<
@@ -57,10 +58,12 @@ export default function LivesPage() {
               <div key={live.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="aspect-video bg-gray-200 relative">
                   {live.thumbnail ? (
-                    <img 
+                    <Image 
                       src={live.thumbnail} 
                       alt={live.title}
                       className="w-full h-full object-cover"
+                      width={150}
+                      height={150}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">

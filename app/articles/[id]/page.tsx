@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/lib/use-cart';
 import { ArrowLeft, Heart, Share2, Plus } from 'lucide-react';
 import { Prisma } from '@prisma/client';
+import Image from 'next/image';
 
 
 export default function ArticlePage() {
@@ -102,10 +103,13 @@ export default function ArticlePage() {
           {/* Images */}
           <div>
             <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden mb-4">
-              <img
+              <Image
                 src={article.images[selectedImage].url}
                 alt={article.name}
                 className="w-full h-full object-cover"
+                width={150}
+                height={150}
+                priority
               />
             </div>
             
@@ -119,10 +123,12 @@ export default function ArticlePage() {
                       selectedImage === index ? 'border-pink-600' : 'border-transparent'
                     }`}
                   >
-                    <img
+                    <Image
                       src={image.url}
                       alt={`${article.name} ${index + 1}`}
                       className="w-full h-full object-cover"
+                      width={150}
+                      height={150}
                     />
                   </button>
                 ))}

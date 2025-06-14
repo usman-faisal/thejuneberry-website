@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, Edit, Trash2, ShoppingBag, Upload, X, ImageIcon } from 'lucide-react'
 import { Prisma } from '@prisma/client'
+import Image from 'next/image'
 
 interface ImageUpload {
   file: File
@@ -28,7 +29,7 @@ export default function AdminArticlesPage() {
   }> | null>(null)
   const [imageUploads, setImageUploads] = useState<ImageUpload[]>([])
   const [uploadingImages, setUploadingImages] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -89,10 +90,10 @@ export default function AdminArticlesPage() {
     }
   }
 
-  const uploadToCloudinary = async (file: File): Promise<{url: string, public_id: string}> => {
+  const uploadToCloudinary = async (file: File): Promise<{ url: string, public_id: string }> => {
     const formData = new FormData()
     formData.append('file', file)
-    
+
     const response = await fetch('/api/upload', {
       method: 'POST',
       body: formData,
@@ -104,7 +105,7 @@ export default function AdminArticlesPage() {
     }
 
     const data = await response.json()
-    return {url: data.url, public_id: data.public_id}
+    return { url: data.url, public_id: data.public_id }
   }
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,29 +122,29 @@ export default function AdminArticlesPage() {
     setImageUploads(prev => [...prev, ...newUploads])
   }
 
-  const uploadImages = async (): Promise<{url: string, public_id: string}[]> => {
+  const uploadImages = async (): Promise<{ url: string, public_id: string }[]> => {
     const pendingUploads = imageUploads.filter(upload => !upload.uploaded && !upload.uploading);
     if (pendingUploads.length === 0) {
       return [];
     }
-    
+
     setUploadingImages(true);
-    
+
     // Mark all pending uploads as 'uploading'
-    setImageUploads(prev => prev.map(u => 
+    setImageUploads(prev => prev.map(u =>
       pendingUploads.includes(u) ? { ...u, uploading: true } : u
     ));
 
     const uploadPromises = pendingUploads.map(async (upload) => {
       try {
-        const {url, public_id} = await uploadToCloudinary(upload.file);
-        setImageUploads(prev => prev.map(u => 
+        const { url, public_id } = await uploadToCloudinary(upload.file);
+        setImageUploads(prev => prev.map(u =>
           u.preview === upload.preview ? { ...u, uploading: false, uploaded: true, url, public_id } : u
         ));
         return { status: 'fulfilled', value: url, public_id, preview: upload.preview };
       } catch (error) {
         console.error('Error uploading image:', error);
-        setImageUploads(prev => prev.map(u => 
+        setImageUploads(prev => prev.map(u =>
           u.preview === upload.preview ? { ...u, uploading: false, error: 'Upload failed' } : u
         ));
         return { status: 'rejected', reason: error, preview: upload.preview };
@@ -151,11 +152,11 @@ export default function AdminArticlesPage() {
     });
 
     const results = await Promise.all(uploadPromises);
-    
+
     const successfulUploads = results
       .filter(result => result.status === 'fulfilled')
-      .map(result => ({url: result.value, public_id: result.public_id}));
-    
+      .map(result => ({ url: result.value, public_id: result.public_id }));
+
     const hasFailures = results.some(result => result.status === 'rejected');
     if (hasFailures) {
       alert('Some images failed to upload. Please review and try again.');
@@ -163,7 +164,7 @@ export default function AdminArticlesPage() {
       throw new Error('Image upload failed');
     }
 
-    return successfulUploads as {url: string, public_id: string}[];
+    return successfulUploads as { url: string, public_id: string }[];
   }
 
   const removeImageUpload = (index: number) => {
@@ -209,10 +210,10 @@ export default function AdminArticlesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const hasPendingUploads = imageUploads.some(upload => !upload.uploaded && !upload.uploading);
-      
+
       if (hasPendingUploads) {
         setUploadingImages(true);
       }
@@ -225,23 +226,23 @@ export default function AdminArticlesPage() {
         ...formData.images,
         ...newImageUrls.map(img => ({ url: img.url, public_id: img.public_id }))
       ];
-      
+
       const payload = {
         ...formData,
         images: allImages,
         price: parseFloat(formData.price),
         liveId: formData.liveId || null,
       };
-      
+
       const url = editingArticle ? `/api/articles/${editingArticle.id}` : '/api/articles';
       const method = editingArticle ? 'PUT' : 'POST';
-      
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      
+
       if (response.ok) {
         fetchArticles();
         resetForm();
@@ -260,7 +261,8 @@ export default function AdminArticlesPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this article?')) {
       try {
-        const response = await fetch(`/api/articles/${id}`, { method: 'DELETE',
+        const response = await fetch(`/api/articles/${id}`, {
+          method: 'DELETE',
           body: JSON.stringify({ articleId: id }),
         })
         if (response.ok) {
@@ -328,7 +330,7 @@ export default function AdminArticlesPage() {
             <h2 className="text-2xl font-bold mb-6">
               {editingArticle ? 'Edit Article' : 'Add New Article'}
             </h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
@@ -372,7 +374,7 @@ export default function AdminArticlesPage() {
               {/* Image Upload Section */}
               <div>
                 <label className="block text-sm font-medium mb-4">Images</label>
-                
+
                 <div className="flex gap-2 mb-4">
                   <label className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer">
                     <Upload size={16} className="mr-2" />
@@ -385,7 +387,7 @@ export default function AdminArticlesPage() {
                       className="hidden"
                     />
                   </label>
-                  
+
                   <button
                     type="button"
                     onClick={addImageUrl}
@@ -411,10 +413,12 @@ export default function AdminArticlesPage() {
                   {/* Uploaded Images */}
                   {formData.images.map((image, index) => (
                     <div key={`uploaded-${index}`} className="relative group">
-                      <img
+                      <Image
                         src={image.url}
                         alt={`Product ${index + 1}`}
                         className="w-full h-32 object-cover rounded-lg border"
+                        width={150}
+                        height={150}
                       />
                       <button
                         type="button"
@@ -429,26 +433,27 @@ export default function AdminArticlesPage() {
                   {/* Pending Uploads */}
                   {imageUploads.map((upload, index) => (
                     <div key={`upload-${index}`} className="relative group">
-                      <img
+                      <Image
                         src={upload.preview}
                         alt={`Upload ${index + 1}`}
-                        className={`w-full h-32 object-cover rounded-lg border ${
-                          upload.uploading ? 'opacity-50' : ''
-                        }`}
+                        className={`w-full h-32 object-cover rounded-lg border ${upload.uploading ? 'opacity-50' : ''
+                          }`}
+                        width={150}
+                        height={150}
                       />
-                      
+
                       {upload.uploading && (
                         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
                           <div className="text-white text-sm">Uploading...</div>
                         </div>
                       )}
-                      
+
                       {upload.uploaded && (
                         <div className="absolute inset-0 bg-green-500 bg-opacity-20 flex items-center justify-center rounded-lg">
                           <div className="bg-green-500 text-white text-xs px-2 py-1 rounded">✓ Uploaded</div>
                         </div>
                       )}
-                      
+
                       {upload.error && (
                         <div className="absolute inset-0 bg-red-500 bg-opacity-20 flex items-center justify-center rounded-lg">
                           <div className="bg-red-500 text-white text-xs px-2 py-1 rounded">Failed</div>
@@ -503,7 +508,7 @@ export default function AdminArticlesPage() {
                     Add Size
                   </button>
                 </div>
-                
+
                 {formData.sizes.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {formData.sizes.map((size, index) => (
@@ -608,7 +613,7 @@ export default function AdminArticlesPage() {
                   const images = article.images || []
                   const primaryImage = images[0]?.url
                   const sizes = article.sizes.map(sizeObj => sizeObj.size).join(', ') || ''
-                  
+
                   return (
                     <tr key={article.id}>
                       <td className="px-6 py-4">
@@ -616,7 +621,11 @@ export default function AdminArticlesPage() {
                           <div className="h-10 w-10 flex-shrink-0 relative">
                             {primaryImage ? (
                               <>
-                                <img className="h-10 w-10 rounded object-cover" src={primaryImage} alt="" />
+                                <Image className="h-10 w-10 rounded object-cover" src={primaryImage}
+                                  width={150}
+                                  height={150}
+                                  alt='Article Image'
+                                />
                                 {images.length > 1 && (
                                   <div className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                                     {images.length}
@@ -644,11 +653,10 @@ export default function AdminArticlesPage() {
                         {article.category || 'Uncategorized'}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          article.inStock 
-                            ? 'bg-green-100 text-green-800' 
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${article.inStock
+                            ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
-                        }`}>
+                          }`}>
                           {article.inStock ? 'In Stock' : 'Out of Stock'}
                         </span>
                       </td>

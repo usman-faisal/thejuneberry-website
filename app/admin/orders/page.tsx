@@ -1,18 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Package, Eye, Phone, Mail, MapPin } from 'lucide-react'
-import { Prisma } from '@prisma/client';
+import { Package, Eye } from 'lucide-react'
+import { Prisma } from '@prisma/client'
+import { useRouter } from 'next/navigation'
 
 export default function AdminOrdersPage() {
+  const router = useRouter()
   const [orders, setOrders] = useState<Prisma.OrderGetPayload<{
     include: { items: true };
   }>[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedOrder, setSelectedOrder] = useState<Prisma.OrderGetPayload<{
-    include: { items: true };
-  }> | null>(null)
-  const [showDetails, setShowDetails] = useState(false)
 
   useEffect(() => {
     fetchOrders()
@@ -27,25 +25,6 @@ export default function AdminOrdersPage() {
       console.error('Error fetching orders:', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    try {
-      const response = await fetch(`/api/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      })
-      
-      if (response.ok) {
-        fetchOrders()
-        if (selectedOrder && selectedOrder.id === orderId) {
-          setSelectedOrder({ ...selectedOrder, status: newStatus as any })
-        }
-      }
-    } catch (error) {
-      console.error('Error updating order status:', error)
     }
   }
 
@@ -72,105 +51,6 @@ export default function AdminOrdersPage() {
           Total Orders: {orders.length}
         </div>
       </div>
-
-      {/* Order Details Modal */}
-      {showDetails && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Order Details</h2>
-              <button
-                onClick={() => setShowDetails(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div className="space-y-6">
-              {/* Customer Information */}
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Customer Information</h3>
-                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                  <div className="flex items-center">
-                    <span className="font-medium w-24">Name:</span>
-                    <span>{selectedOrder.customerName}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Mail size={16} className="mr-2" />
-                    <span className="font-medium w-24">Email:</span>
-                    <span>{selectedOrder.email}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Phone size={16} className="mr-2" />
-                    <span className="font-medium w-24">Phone:</span>
-                    <span>{selectedOrder.phone}</span>
-                  </div>
-                  <div className="flex items-start">
-                    <MapPin size={16} className="mr-2 mt-1" />
-                    <span className="font-medium w-24">Address:</span>
-                    <div>
-                      <div>{selectedOrder.address}</div>
-                      <div>{selectedOrder.city}{selectedOrder.postalCode && `, ${selectedOrder.postalCode}`}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Status */}
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Order Status</h3>
-                <div className="flex gap-2">
-                  {['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => updateOrderStatus(selectedOrder.id, status)}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        selectedOrder.status === status
-                          ? getStatusColor(status)
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {status}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Order Items */}
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Order Items</h3>
-                <div className="space-y-3">
-                  {selectedOrder.items.map((item) => (
-                    <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                      <div>
-                        <span className="font-medium">Article ID: {item.articleId}</span>
-                        <div className="text-sm text-gray-600">Quantity: {item.quantity}</div>
-                      </div>
-                      <div className="font-semibold">
-                        Rs. {(item.price * item.quantity).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t pt-3 mt-3">
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total:</span>
-                    <span>Rs. {selectedOrder.total.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Meta */}
-              <div className="text-sm text-gray-500">
-                <div>Order ID: {selectedOrder.id}</div>
-                <div>Created: {new Date(selectedOrder.createdAt).toLocaleString()}</div>
-                <div>Updated: {new Date(selectedOrder.updatedAt).toLocaleString()}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Orders List */}
       <div className="bg-white rounded-lg shadow-sm">
@@ -229,10 +109,7 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-6 py-4 text-sm font-medium">
                       <button
-                        onClick={() => {
-                          setSelectedOrder(order)
-                          setShowDetails(true)
-                        }}
+                        onClick={() => router.push(`/admin/orders/${order.id}`)}
                         className="text-indigo-600 hover:text-indigo-900 flex items-center"
                       >
                         <Eye size={16} className="mr-1" />

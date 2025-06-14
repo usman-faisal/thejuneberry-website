@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Search, Filter, ShoppingBag } from 'lucide-react'
 import { Prisma } from '@prisma/client'
+import Image from 'next/image'
 
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<Prisma.ArticleGetPayload<{
@@ -141,10 +142,12 @@ export default function ArticlesPage() {
               <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="aspect-square bg-gray-200">
                   {article.images ? (
-                    <img 
+                    <Image 
                       src={article.images[0].url} 
                       alt={article.name}
                       className="w-full h-full object-cover"
+                      width={150}
+                      height={150}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">

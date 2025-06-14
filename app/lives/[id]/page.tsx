@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, Play, ShoppingBag } from 'lucide-react'
 import { Prisma } from '@prisma/client'
+import Image from 'next/image'
 
 export default function LiveDetailPage() {
   const params = useParams()
@@ -124,10 +125,12 @@ export default function LiveDetailPage() {
                 <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="aspect-square bg-gray-200">
                     {article.images.length > 0 ? (
-                      <img
+                      <Image
                         src={article.images[0].url}
                         alt={article.name}
                         className="w-full h-full object-cover"
+                        width={150}
+                        height={150}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">

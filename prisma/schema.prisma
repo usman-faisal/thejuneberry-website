@@ -23,18 +23,19 @@ model Live {
 }
 
 model Article {
-  id          String  @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
   description String?
   price       Float
   images      Image[]
   category    String?
   sizes       ArticleSize[]
-  inStock     Boolean @default(true)
+  inStock     Boolean     @default(true)
   liveId      String?
-  live        Live?   @relation(fields: [liveId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  live        Live?       @relation(fields: [liveId], references: [id])
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 model ArticleSize {
@@ -47,7 +48,7 @@ model ArticleSize {
 model Order {
   id          String      @id @default(cuid())
   customerName String
-  email       String
+  email       String?
   phone       String
   address     String
   city        String
@@ -64,6 +65,7 @@ model OrderItem {
   orderId   String
   order     Order   @relation(fields: [orderId], references: [id])
   articleId String
+  article   Article @relation(fields: [articleId], references: [id])
   quantity  Int
   price     Float
 }

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCart } from '@/lib/use-cart';
 import { ArrowLeft, ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 
 export default function CheckoutPage() {
@@ -18,15 +19,13 @@ export default function CheckoutPage() {
     address: '',
     city: '',
     province: '',
-    postalCode: ''
+    postalCode: '',
+    country: 'Pakistan'
   });
 
   const { items: cartItems, totalPrice: cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
 
-  const provinces = [
-    'Punjab', 'Sindh', 'Khyber Pakhtunkhwa', 'Balochistan',
-    'Gilgit-Baltistan', 'Azad Kashmir', 'Islamabad Capital Territory'
-  ];
+
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -56,11 +55,13 @@ export default function CheckoutPage() {
       const orderPromises = itemsToOrder.map(item => {
         const orderData = {
           ...formData,
+          // only add email if it's provided
           article: item.articleId,
           selectedSize: item.selectedSize,
           quantity: item.quantity,
           totalAmount: item.price * item.quantity,
           items: itemsToOrder,
+          ...(formData.email ? { email: formData.email } : {}),
         };
 
         return fetch('/api/orders', {
@@ -76,7 +77,6 @@ export default function CheckoutPage() {
       const allSuccessful = responses.every(response => response.ok);
 
       if (allSuccessful) {
-        alert('Order(s) placed successfully! We will contact you soon.');
 
         // Clear checkout data
         localStorage.removeItem('checkoutData');
@@ -138,9 +138,12 @@ export default function CheckoutPage() {
                 return (
                   <div key={itemKey} className="flex items-center space-x-4 p-4 border rounded-lg">
                     <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                      <img
+                      <Image
                         src={item.image}
                         className="w-full h-full object-cover"
+                        alt={item.name}
+                        width={150}
+                        height={150}
                       />
                     </div>
 
@@ -197,11 +200,17 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Delivery:</span>
-                  <span className="text-green-600">Free</span>
+                  {formData.country === 'Pakistan' ? (
+                    <span className="text-green-600">300 PKR</span>
+                  ) : (
+                    <span className="text-gray-600">Contact us for delivery fee</span>
+                  )}
                 </div>
                 <div className="flex justify-between items-center text-lg font-semibold border-t pt-2">
                   <span>Total:</span>
-                  <span className="text-pink-600">Rs. {totalAmount.toLocaleString()}</span>
+                  <span className="text-pink-600">
+                    Rs. {formData.country === 'Pakistan' ? (totalAmount + 300).toLocaleString() : totalAmount.toLocaleString()}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -229,14 +238,13 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email *
+                      Email
                     </label>
                     <Input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      required
                     />
                   </div>
                 </div>
@@ -286,32 +294,44 @@ export default function CheckoutPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Province *
                     </label>
-                    <select
+                    <Input
+                      type="text"
                       name="province"
                       value={formData.province}
                       onChange={handleInputChange}
                       required
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      <option value="">Select Province</option>
-                      {provinces.map(province => (
-                        <option key={province} value={province}>{province}</option>
-                      ))}
-                    </select>
+                    />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Postal Code
-                  </label>
-                  <Input
-                    type="text"
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleInputChange}
-                    placeholder="54000"
-                  />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Country *
+                    </label>
+                    <select
+                      name="country"
+                      value={formData.country}
+                      onChange={handleInputChange}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      required
+                    >
+                      <option value="Pakistan">Pakistan</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Postal Code
+                    </label>
+                    <Input
+                      type="text"
+                      name="postalCode"
+                      value={formData.postalCode}
+                      onChange={handleInputChange}
+                      placeholder="54000"
+                    />
+                  </div>
                 </div>
 
                 <Button
@@ -325,6 +345,10 @@ export default function CheckoutPage() {
 
                 <p className="text-sm text-gray-600 text-center">
                   * Cash on Delivery available. We'll contact you to confirm your order.
+                </p>
+
+                <p className="text-sm text-gray-600 text-center">
+                  * 
                 </p>
               </form>
             </CardContent>

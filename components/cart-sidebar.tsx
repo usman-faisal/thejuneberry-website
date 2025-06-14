@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCart } from '@/lib/use-cart';
 import { X, ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
+import Image from 'next/image';
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -66,10 +67,12 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
                     <Card key={itemKey} className="p-4">
                       <div className="flex items-start space-x-4">
                         <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                          <img
+                          <Image
                             src={item.image}
                             alt={item.name}
                             className="w-full h-full object-cover"
+                            width={150}
+                            height={150}
                           />
                         </div>
                         

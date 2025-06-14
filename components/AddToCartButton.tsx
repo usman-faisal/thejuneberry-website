@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/lib/use-cart';
 import { ShoppingCart, Check, Plus } from 'lucide-react';
-import { Article, ArticleSize, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 interface AddToCartButtonProps {
   article: Prisma.ArticleGetPayload<{
     include: { images: true, sizes: true };
   }>;
-  selectedSize: ArticleSize;
+  selectedSize: Prisma.ArticleSizeGetPayload<{}>;
   quantity?: number;
   showIcon?: boolean;
   className?: string;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Plus, Edit, Trash2, Calendar, Play } from 'lucide-react'
-import { Live, Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 
 export default function AdminLivesPage() {
   const [lives, setLives] = useState<Prisma.LiveGetPayload<{

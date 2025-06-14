@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/lib/use-cart';
-import { ArrowLeft, ShoppingCart, Heart, Share2, Plus } from 'lucide-react';
-import { Article, Prisma } from '@prisma/client';
+import { ArrowLeft, Heart, Share2, Plus } from 'lucide-react';
+import { Prisma } from '@prisma/client';
 
 
 export default function ArticlePage() {

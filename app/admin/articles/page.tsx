@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Plus, Edit, Trash2, ShoppingBag, Upload, X, ImageIcon } from 'lucide-react'
-import { Article, Live, Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 
 interface ImageUpload {
   file: File

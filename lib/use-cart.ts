@@ -1,6 +1,5 @@
 "use client"
 
-import { ArticleSize } from '@prisma/client';
 import { useCart as useCartContext } from './cart-context';
 
 export const useCart = () => {

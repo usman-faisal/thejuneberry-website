@@ -90,7 +90,7 @@ export function OrderDetails({ order }: OrderDetailsProps) {
                   <span className="font-medium w-24">Address:</span>
                   <div>
                     <div>{order.address}</div>
-                    <div>{order.city}{order.postalCode && `, ${order.postalCode}`}</div>
+                    <div>{order.city}{order.postalCode && `, PKR{order.postalCode}`}</div>
                   </div>
                 </div>
               </div>
@@ -143,11 +143,11 @@ export function OrderDetails({ order }: OrderDetailsProps) {
                   <div className="flex-grow">
                     <h3 className="font-medium">{item.article.name}</h3>
                     <div className="text-sm text-gray-500">Quantity: {item.quantity}</div>
-                    <div className="text-sm text-gray-500">Price: ${item.price.toFixed(2)}</div>
+                    <div className="text-sm text-gray-500">Price: PKR{item.price.toFixed(2)}</div>
                   </div>
                   <div className="text-right">
                     <div className="font-semibold">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      PKR{(item.price * item.quantity).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -156,13 +156,13 @@ export function OrderDetails({ order }: OrderDetailsProps) {
             <div className="mt-6 border-t pt-4">
               <div className="flex justify-between text-lg font-bold">
                 <span>Shipping Cost:</span>
-                <span>${order.shippingCost.toFixed(2)}</span>
+                <span>PKR{order.shippingCost.toFixed(2)}</span>
               </div>
             </div>
             <div className="mt-6 border-t pt-4">
               <div className="flex justify-between text-lg font-bold">
                 <span>Total:</span>
-                <span>${(order.shippingCost + order.total).toFixed(2)}</span>
+                <span>PKR{(order.shippingCost + order.total).toFixed(2)}</span>
               </div>
             </div>
           </div>

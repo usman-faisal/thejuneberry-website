@@ -79,7 +79,7 @@ export function CheckoutForm({ cartItems, totalAmount }: CheckoutFormProps) {
       setLoading(false);
     }
   };
-
+  const totalAmountAfterShipping = formData.country === 'Pakistan' ? (totalAmount + 300).toLocaleString() : totalAmount.toLocaleString()
   return (
     <div className="grid lg:grid-cols-2 gap-8">
       {/* Order Summary */}
@@ -134,7 +134,7 @@ export function CheckoutForm({ cartItems, totalAmount }: CheckoutFormProps) {
             <div className="flex justify-between items-center text-lg font-semibold border-t pt-2">
               <span>Total:</span>
               <span className="text-pink-600">
-                Rs. {formData.country === 'Pakistan' ? (totalAmount + 300).toLocaleString() : totalAmount.toLocaleString()}
+                Rs. {totalAmountAfterShipping}
               </span>
             </div>
           </div>
@@ -265,7 +265,7 @@ export function CheckoutForm({ cartItems, totalAmount }: CheckoutFormProps) {
               className="w-full bg-pink-600 hover:bg-pink-700"
               disabled={loading}
             >
-              {loading ? 'Placing Order...' : `Place Order - Rs. ${totalAmount.toLocaleString()}`}
+              {loading ? 'Placing Order...' : `Place Order - Rs. ${totalAmountAfterShipping}`}
             </Button>
 
             <p className="text-sm text-gray-600 text-center">

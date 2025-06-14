@@ -83,7 +83,7 @@ export function OrderList({ initialOrders }: OrderListProps) {
               <TableCell className="font-medium">{order.id}</TableCell>
               <TableCell>{order.customerName}</TableCell>
               <TableCell>{format(new Date(order.createdAt), 'PPP')}</TableCell>
-              <TableCell>${order.total.toFixed(2)}</TableCell>
+              <TableCell>PKR{(order.total + order.shippingCost).toLocaleString()}</TableCell>
               <TableCell>
                 <Select
                   defaultValue={order.status}

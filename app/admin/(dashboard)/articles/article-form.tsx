@@ -5,6 +5,7 @@ import { Plus, Upload, X, ImageIcon } from 'lucide-react'
 import Image from 'next/image'
 import { Live, Prisma } from '@prisma/client'
 import { createArticle, updateArticle } from '@/app/actions/articles'
+import { uploadToCloudinary } from '@/app/actions/upload'
 
 interface ImageUpload {
   file: File
@@ -47,22 +48,17 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
     liveId: editingArticle?.liveId || ''
   })
 
-  const uploadToCloudinary = async (file: File): Promise<{ url: string, public_id: string }> => {
+  const handleImageUpload = async (file: File): Promise<{ url: string, public_id: string }> => {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Failed to upload image')
+    const result = await uploadToCloudinary(formData)
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to upload image')
     }
 
-    const data = await response.json()
-    return { url: data.url, public_id: data.public_id }
+    return { url: result.url, public_id: result.public_id }
   }
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,7 +89,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
 
     const uploadPromises = pendingUploads.map(async (upload) => {
       try {
-        const { url, public_id } = await uploadToCloudinary(upload.file)
+        const { url, public_id } = await handleImageUpload(upload.file)
         setImageUploads(prev => prev.map(u =>
           u.preview === upload.preview ? { ...u, uploading: false, uploaded: true, url, public_id } : u
         ))

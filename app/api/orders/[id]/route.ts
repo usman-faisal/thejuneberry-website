@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = await context.params.id
+    const { id } = await context.params
     const order = await prisma.order.findUnique({
       where: { id  },
       include: {
@@ -35,10 +35,10 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = await context.params.id
+    const { id } = await context.params
     const data = await request.json()
     const order = await prisma.order.update({
       where: { id },

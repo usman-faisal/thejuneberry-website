@@ -186,10 +186,17 @@ export default function OrderDetailsPage() {
                 </div>
               ))}
             </div>
+            {/**shipping cost */}
+            <div className="mt-6 border-t pt-4">
+              <div className="flex justify-between text-lg font-bold">
+                <span>Shipping Cost:</span>
+                <span>Rs. {order.shippingCost.toLocaleString()}</span>
+              </div>
+            </div>
             <div className="mt-6 border-t pt-4">
               <div className="flex justify-between text-lg font-bold">
                 <span>Total:</span>
-                <span>Rs. {order.total.toLocaleString()}</span>
+                <span>Rs. {(order.shippingCost + order.total).toLocaleString()}</span>
               </div>
             </div>
           </div>

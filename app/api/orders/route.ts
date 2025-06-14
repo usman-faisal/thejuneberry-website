@@ -34,13 +34,14 @@ export async function POST(request: Request) {
         price: true
       }
     })
+    const shippingCost = data.country === 'Pakistan' ? 300 : 0
     const total = data.items.reduce((acc: number, item: any) => {
       const article = items.find((a) => a.id === item.articleId)
       if (article) {
         return acc + (article.price * item.quantity)
       }
       return acc
-    }, 0) + 300 // add shipping cost
+    }, 0)
 
     const order = await prisma.order.create({
       data: {
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
         city: data.city,
         postalCode: data.postalCode,
         total: total,
+        shippingCost,
         items: {
           create: data.items.map((item: any) => ({
             articleId: item.articleId,

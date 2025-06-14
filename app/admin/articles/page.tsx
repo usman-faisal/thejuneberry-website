@@ -210,39 +210,44 @@ export default function AdminArticlesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     try {
       const hasPendingUploads = imageUploads.some(upload => !upload.uploaded && !upload.uploading);
-
+  
       if (hasPendingUploads) {
         setUploadingImages(true);
       }
-
+  
       // Upload any pending images and get their URLs
       const newImageUrls = await uploadImages();
-
+  
       // Combine existing images with new uploads
       const allImages = [
         ...formData.images,
         ...newImageUrls.map(img => ({ url: img.url, public_id: img.public_id }))
       ];
-
+  
+      // Create a clean payload with only the necessary fields
       const payload = {
-        ...formData,
-        images: allImages,
+        name: formData.name,
+        description: formData.description,
         price: parseFloat(formData.price),
+        images: allImages,
+        category: formData.category,
+        sizes: formData.sizes, // This will be an array of strings
+        inStock: formData.inStock,
         liveId: formData.liveId || null,
       };
-
+  
       const url = editingArticle ? `/api/articles/${editingArticle.id}` : '/api/articles';
       const method = editingArticle ? 'PUT' : 'POST';
-
+  
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-
+  
       if (response.ok) {
         fetchArticles();
         resetForm();
@@ -253,11 +258,12 @@ export default function AdminArticlesPage() {
       }
     } catch (error) {
       console.error('Error in submission process:', error);
+      alert('An error occurred while saving the article');
     } finally {
       setUploadingImages(false);
     }
   }
-
+  
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this article?')) {
       try {

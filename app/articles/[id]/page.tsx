@@ -107,8 +107,8 @@ export default function ArticlePage() {
                 src={article.images[selectedImage].url}
                 alt={article.name}
                 className="w-full h-full object-cover"
-                width={150}
-                height={150}
+                width={400}
+                height={400}
                 priority
               />
             </div>
@@ -127,8 +127,8 @@ export default function ArticlePage() {
                       src={image.url}
                       alt={`${article.name} ${index + 1}`}
                       className="w-full h-full object-cover"
-                      width={150}
-                      height={150}
+                      width={200}
+                      height={200}
                     />
                   </button>
                 ))}

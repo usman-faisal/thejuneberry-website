@@ -67,55 +67,86 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
-    const data = await request.json()
+    const { id } = await context.params
+    const data = await request.json();
 
     if (!id) {
-      return NextResponse.json({ error: 'Article ID is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Article ID is required' }, { status: 400 });
     }
 
-    const oldSizes = await prisma.articleSize.findMany({
-      where: { articleId: id }
-    })
+    // The full list of images the article *should* have after the update
+    const incomingImages: { url: string; public_id?: string }[] = data.images || [];
+    const incomingSizes: string[] = data.sizes || [];
 
-    const incomingSizes = data.sizes || []
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Get the current state of the article's images from the DB
+      const existingImages = await tx.image.findMany({
+        where: { articleId: id },
+      });
+      const existingImagePublicIds = existingImages.map(img => img.public_id);
+      const incomingImagePublicIds = incomingImages
+        .map(img => img.public_id)
+        .filter(pid => pid); // Filter out any null/undefined public_ids
 
-    // Extract size values for easy comparison
-    const oldSizeValues = oldSizes.map(s => s.size)
-    const newSizeValues = incomingSizes
+      // 2. Determine which images to add and which to delete
+      const imagesToCreate = incomingImages.filter(
+        (img) => img.public_id && !existingImagePublicIds.includes(img.public_id)
+      );
 
-    // Find sizes to add (in incoming but not in DB)
-    const sizesToAdd = newSizeValues.filter((size: any) => !oldSizeValues.includes(size))
+      const imagesToDelete = existingImages.filter(
+        (img) => !incomingImagePublicIds.includes(img.public_id)
+      );
 
-    // Find sizes to delete (in DB but not in incoming)
-    const sizesToDelete = oldSizes.filter(oldSize => !newSizeValues.includes(oldSize.size))
+      // 3. Delete images from Cloudinary and the database
+      if (imagesToDelete.length > 0) {
+        // Delete from Cloudinary
+        const publicIdsToDelete = imagesToDelete.map(img => img.public_id);
+        await cloudinary.api.delete_resources(publicIdsToDelete);
 
-    // Delete removed sizes
-    await prisma.articleSize.deleteMany({
-      where: {
-        articleId: id,
-        size: { in: sizesToDelete.map(s => s.size) }
+        // Delete from Database
+        await tx.image.deleteMany({
+          where: {
+            public_id: { in: publicIdsToDelete },
+          },
+        });
       }
-    })
 
-    // Update article and add new sizes
-    const article = await prisma.article.update({
-      where: { id },
-      data: {
-        name: data.name,
-        description: data.description,
-        price: parseFloat(data.price),
-        category: data.category,
-        sizes: {
-          create: sizesToAdd.map((size: any) => ({ size }))
+      // 4. Handle Sizes: Delete existing and create new ones (your logic is fine)
+      await tx.articleSize.deleteMany({
+        where: { articleId: id },
+      });
+      
+      // 5. Update the article and create the new images and sizes
+      const updatedArticle = await tx.article.update({
+        where: { id },
+        data: {
+          name: data.name,
+          description: data.description,
+          price: parseFloat(data.price),
+          category: data.category,
+          inStock: data.inStock ?? true,
+          liveId: data.liveId || null,
+          sizes: {
+            create: incomingSizes.map((size: string) => ({ size })),
+          },
+          images: {
+            create: imagesToCreate.map(img => ({
+              url: img.url,
+              public_id: img.public_id!, // The filter above ensures public_id exists
+            })),
+          },
         },
-        inStock: data.inStock ?? true,
-        liveId: data.liveId
-      }
-    })
-    return NextResponse.json(article)
+        include: { sizes: true, images: true },
+      });
+
+      return updatedArticle;
+  }, {timeout: 10000});
+
+    return NextResponse.json(result);
   } catch (error) {
-    console.log(error)
-    return NextResponse.json({ error: 'Failed to update article' }, { status: 500 })
+    console.error('Failed to update article:', error);
+    // Provide more detailed error response in development
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to update article', details: errorMessage }, { status: 500 });
   }
 }

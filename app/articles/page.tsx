@@ -3,11 +3,15 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Search, Filter, ShoppingBag } from 'lucide-react'
-import { Article } from '@/lib/types'
+import { Prisma } from '@prisma/client'
 
 export default function ArticlesPage() {
-  const [articles, setArticles] = useState<Article[]>([])
-  const [filteredArticles, setFilteredArticles] = useState<Article[]>([])
+  const [articles, setArticles] = useState<Prisma.ArticleGetPayload<{
+    include: { images: true, sizes: true };
+  }>[]>([])
+  const [filteredArticles, setFilteredArticles] = useState<Prisma.ArticleGetPayload<{
+    include: { images: true, sizes: true };
+  }>[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
@@ -107,7 +111,7 @@ export default function ArticlesPage() {
             >
               <option value="">All Categories</option>
               {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
+                <option key={category} value={category ?? ""}>{category}</option>
               ))}
             </select>
 
@@ -136,9 +140,9 @@ export default function ArticlesPage() {
             {filteredArticles.map((article) => (
               <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="aspect-square bg-gray-200">
-                  {article.image ? (
+                  {article.images ? (
                     <img 
-                      src={article.image} 
+                      src={article.images[0].url} 
                       alt={article.name}
                       className="w-full h-full object-cover"
                     />
@@ -159,14 +163,11 @@ export default function ArticlesPage() {
                   </p>
                   
                   <div className="flex gap-2 mb-3">
-                    {article.size && (
+                    {article.sizes && (
                       <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                        {article.size}
-                      </span>
-                    )}
-                    {article.color && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                        {article.color}
+                        {article.sizes.map(size => {
+                          return <span key={size.id} className="mr-1">{size.size}</span>
+                        })}
                       </span>
                     )}
                   </div>

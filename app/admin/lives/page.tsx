@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import { Plus, Edit, Trash2, Calendar, Play } from 'lucide-react'
-import { Live } from '@/lib/types'
+import { Live, Prisma } from '@prisma/client'
 
 export default function AdminLivesPage() {
-  const [lives, setLives] = useState<Live[]>([])
+  const [lives, setLives] = useState<Prisma.LiveGetPayload<{
+    include: { articles: true };
+  }>[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editingLive, setEditingLive] = useState<Live | null>(null)
-  
+  const [editingLive, setEditingLive] = useState<Prisma.LiveGetPayload<{
+    include: { articles: true };
+  }> | null>(null)
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',

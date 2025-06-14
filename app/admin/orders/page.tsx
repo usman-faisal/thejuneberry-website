@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { Package, Eye, Phone, Mail, MapPin } from 'lucide-react'
-import { Order } from '@/lib/types'
+import { Prisma } from '@prisma/client';
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([])
+  const [orders, setOrders] = useState<Prisma.OrderGetPayload<{
+    include: { items: true };
+  }>[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<Prisma.OrderGetPayload<{
+    include: { items: true };
+  }> | null>(null)
   const [showDetails, setShowDetails] = useState(false)
 
   useEffect(() => {

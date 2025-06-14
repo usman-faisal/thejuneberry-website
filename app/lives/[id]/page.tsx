@@ -4,11 +4,20 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, Play, ShoppingBag } from 'lucide-react'
-import { Live } from '@/lib/types'
+import { Prisma } from '@prisma/client'
 
 export default function LiveDetailPage() {
   const params = useParams()
-  const [live, setLive] = useState<Live | null>(null)
+  const [live, setLive] = useState<Prisma.LiveGetPayload<{
+    include: {
+      articles: {
+        include: {
+          images: true,
+          sizes: true
+        }
+      }
+    }
+  }> | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -114,9 +123,9 @@ export default function LiveDetailPage() {
               {live.articles.map((article) => (
                 <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="aspect-square bg-gray-200">
-                    {article.image ? (
+                    {article.images.length > 0 ? (
                       <img
-                        src={article.image}
+                        src={article.images[0].url}
                         alt={article.name}
                         className="w-full h-full object-cover"
                       />
@@ -134,14 +143,9 @@ export default function LiveDetailPage() {
                     </p>
 
                     <div className="flex gap-2 mb-3">
-                      {article.size && (
+                      {article.sizes && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                          {article.size}
-                        </span>
-                      )}
-                      {article.color && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                          {article.color}
+                          {article.sizes.map((size) => size.size).join(', ')}
                         </span>
                       )}
                     </div>

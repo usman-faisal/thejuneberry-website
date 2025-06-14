@@ -1,245 +1,373 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { Article } from '@/lib/types'
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCart } from '@/lib/use-cart';
+import { ArrowLeft, ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
+import Link from 'next/link';
+
+interface CheckoutData {
+  articleId: string;
+  articleName: string;
+  price: number;
+  selectedSize: string;
+  image: string;
+  quantity: number;
+}
 
 export default function CheckoutPage() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const [article, setArticle] = useState<Article | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-  
+  const [checkoutType, setCheckoutType] = useState<'single' | 'cart'>('cart');
+  const [singleItemData, setSingleItemData] = useState<CheckoutData | null>(null);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',
     email: '',
     phone: '',
     address: '',
     city: '',
+    province: '',
     postalCode: ''
-  })
+  });
+
+  const { items: cartItems, totalPrice: cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
+
+  const provinces = [
+    'Punjab', 'Sindh', 'Khyber Pakhtunkhwa', 'Balochistan', 
+    'Gilgit-Baltistan', 'Azad Kashmir', 'Islamabad Capital Territory'
+  ];
 
   useEffect(() => {
-    const articleId = searchParams.get('article')
-    if (articleId) {
-      fetchArticle(articleId)
+    // Check for single item checkout data
+    const singleData = localStorage.getItem('checkoutData');
+    const cartData = localStorage.getItem('checkoutCartData');
+    
+    if (singleData) {
+      setSingleItemData(JSON.parse(singleData));
+      setCheckoutType('single');
+    } else if (cartItems.length > 0) {
+      setCheckoutType('cart');
+    } else {
+      // No items to checkout
+      setCheckoutType('cart');
     }
-  }, [searchParams])
+  }, [cartItems]);
 
-  const fetchArticle = async (id: string) => {
-    try {
-      const response = await fetch(`/api/articles/${id}`)
-      const data = await response.json()
-      setArticle(data)
-    } catch (error) {
-      console.error('Error fetching article:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
-    })
-  }
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!article) return
+    e.preventDefault();
+    
+    const itemsToOrder = checkoutType === 'single' && singleItemData 
+      ? [singleItemData] 
+      : cartItems.map(item => ({
+          articleId: item.id,
+          articleName: item.name,
+          price: item.price,
+          selectedSize: item.selectedSize,
+          image: item.image,
+          quantity: item.quantity
+        }));
 
-    setSubmitting(true)
+    if (itemsToOrder.length === 0) return;
+
+    setLoading(true);
+
     try {
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const orderPromises = itemsToOrder.map(item => {
+        const orderData = {
           ...formData,
-          items: [{
-            articleId: article.id,
-            quantity: 1,
-            price: article.price
-          }],
-          total: article.price
-        }),
-      })
+          article: item.articleId,
+          selectedSize: item.selectedSize,
+          quantity: item.quantity,
+          totalAmount: item.price * item.quantity
+        };
 
-      if (response.ok) {
-        router.push('/checkout/success')
+        return fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+        });
+      });
+
+      const responses = await Promise.all(orderPromises);
+      const allSuccessful = responses.every(response => response.ok);
+
+      if (allSuccessful) {
+        alert('Order(s) placed successfully! We will contact you soon.');
+        
+        // Clear checkout data
+        localStorage.removeItem('checkoutData');
+        localStorage.removeItem('checkoutCartData');
+        
+        if (checkoutType === 'cart') {
+          clearCart();
+        }
+        
+        window.location.href = '/';
       } else {
-        alert('Failed to place order. Please try again.')
+        alert('Error placing some orders. Please try again.');
       }
     } catch (error) {
-      console.error('Error placing order:', error)
-      alert('Failed to place order. Please try again.')
+      console.error('Error placing order:', error);
+      alert('Error placing order. Please try again.');
     } finally {
-      setSubmitting(false)
+      setLoading(false);
     }
-  }
+  };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pink-600"></div>
-      </div>
-    )
-  }
+  const itemsToDisplay = checkoutType === 'single' && singleItemData ? [singleItemData] : cartItems;
+  const totalAmount = checkoutType === 'single' && singleItemData 
+    ? singleItemData.price * singleItemData.quantity 
+    : cartTotal;
 
-  if (!article) {
+  if (itemsToDisplay.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Article not found</h1>
-          <button onClick={() => router.back()} className="text-pink-600 hover:underline">
-            Go back
-          </button>
+          <ShoppingCart className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Items to Checkout</h2>
+          <p className="text-gray-600 mb-4">Please add items to your cart first.</p>
+          <Link href="/articles">
+            <Button className="bg-pink-600 hover:bg-pink-700">Go to Shop</Button>
+          </Link>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Link href="/articles">
+          <Button variant="outline" className="mb-8">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Shop
+          </Button>
+        </Link>
+
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
 
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid lg:grid-cols-2 gap-8">
           {/* Order Summary */}
-          <div className="bg-gray-50 p-6 rounded-lg h-fit">
-            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-            
-            <div className="flex gap-4 mb-4">
-              <div className="w-20 h-20 bg-gray-200 rounded overflow-hidden">
-                {article.image ? (
-                  <img 
-                    src={article.image} 
-                    alt={article.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-300"></div>
-                )}
-              </div>
-              <div className="flex-1">
-                <h3 className="font-medium">{article.name}</h3>
-                <p className="text-gray-600">Quantity: 1</p>
-                <p className="font-semibold">Rs. {article.price.toLocaleString()}</p>
-              </div>
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Summary ({itemsToDisplay.length} item{itemsToDisplay.length > 1 ? 's' : ''})</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {itemsToDisplay.map((item, index) => {
+                const itemKey = checkoutType === 'single' ? `single-${index}` : `${item.id}-${item.selectedSize}`;
+                return (
+                  <div key={itemKey} className="flex items-center space-x-4 p-4 border rounded-lg">
+                    <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                      <img
+                        src={item.image}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                      <p className="text-sm text-gray-600">
+                        Size: {item.selectedSize}
+                      </p>
+                      <p className="text-lg font-semibold text-pink-600">
+                        Rs. {item.price.toLocaleString()}
+                      </p>
+                      
+                      {/* Quantity Controls for Cart Checkout */}
+                      {checkoutType === 'cart' && (
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity - 1)}
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="w-8 text-center">{item.quantity}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity + 1)}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFromCart(item.id, item.selectedSize)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {/* Quantity Display for Single Item Checkout */}
+                      {checkoutType === 'single' && (
+                        <p className="text-sm text-gray-600 mt-2">
+                          Quantity: {item.quantity}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
 
-            <div className="border-t pt-4">
-              <div className="flex justify-between text-lg font-semibold">
-                <span>Total</span>
-                <span>Rs. {article.price.toLocaleString()}</span>
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span>Rs. {totalAmount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Delivery:</span>
+                  <span className="text-green-600">Free</span>
+                </div>
+                <div className="flex justify-between items-center text-lg font-semibold border-t pt-2">
+                  <span>Total:</span>
+                  <span className="text-pink-600">Rs. {totalAmount.toLocaleString()}</span>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          {/* Customer Details Form */}
-          <div>
-            <h2 className="text-xl font-semibold mb-6">Customer Details</h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  name="customerName"
-                  value={formData.customerName}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                />
-              </div>
+          {/* Customer Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Delivery Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name *
+                    </label>
+                    <Input
+                      type="text"
+                      name="customerName"
+                      value={formData.customerName}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email *
+                    </label>
+                    <Input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address *
-                </label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    City *
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number *
                   </label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
+                  <Input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="+92 300 1234567"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Complete Address *
+                  </label>
+                  <Input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    placeholder="House/Flat #, Street, Area"
+                    required
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      City *
+                    </label>
+                    <Input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Province *
+                    </label>
+                    <select
+                      name="province"
+                      value={formData.province}
+                      onChange={handleInputChange}
+                      required
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="">Select Province</option>
+                      {provinces.map(province => (
+                        <option key={province} value={province}>{province}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Postal Code
                   </label>
-                  <input
+                  <Input
                     type="text"
                     name="postalCode"
                     value={formData.postalCode}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    onChange={handleInputChange}
+                    placeholder="54000"
                   />
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-pink-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {submitting ? 'Placing Order...' : 'Place Order'}
-              </button>
-            </form>
-          </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full bg-pink-600 hover:bg-pink-700"
+                  disabled={loading}
+                >
+                  {loading ? 'Placing Order...' : `Place Order - Rs. ${totalAmount.toLocaleString()}`}
+                </Button>
+
+                <p className="text-sm text-gray-600 text-center">
+                  * Cash on Delivery available. We'll contact you to confirm your order.
+                </p>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
-  )
+  );
 }

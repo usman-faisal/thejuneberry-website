@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Calendar, Play } from 'lucide-react'
-import { Live } from '@/lib/types'
+import { Prisma } from '@prisma/client'
 
 export default function LivesPage() {
-  const [lives, setLives] = useState<Live[]>([])
+  const [lives, setLives] = useState<Prisma.LiveGetPayload<
+    {include: { articles: true } }
+  >[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

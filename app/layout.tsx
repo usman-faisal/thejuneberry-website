@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import Navigation from '@/components/navigation'
-// import { Toaster } from '@/components/ui/toaster'
+import Navbar from '@/components/navigation'
+import { CartProvider } from '@/lib/cart-context'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'TheJuneBerry - Beautiful Dresses Across Pakistan',
-  description: 'Discover beautiful dresses through our live showcases. Shop the latest fashion trends delivered across Pakistan.',
+  title: 'TheJuneBerry - Premium Dresses',
+  description: 'Premium dresses for women across Pakistan',
 }
 
 export default function RootLayout({
@@ -19,9 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Navigation />
-        <main>{children}</main>
-        {/* <Toaster /> */}
+        <CartProvider>
+          <Navbar />
+          <main>{children}</main>
+        </CartProvider>
       </body>
     </html>
   )

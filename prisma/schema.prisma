@@ -27,15 +27,21 @@ model Article {
   name        String
   description String?
   price       Float
-  image       String?
+  images      Image[]
   category    String?
-  size        String?
-  color       String?
+  sizes       ArticleSize[]
   inStock     Boolean @default(true)
   liveId      String?
   live        Live?   @relation(fields: [liveId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model ArticleSize {
+  id        String  @id @default(cuid())
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  size      String
 }
 
 model Order {
@@ -68,4 +74,12 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  public_id String
+  article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId String?
 }

@@ -3,13 +3,19 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
     const live = await prisma.live.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
-        articles: true
+        articles: {
+          include: {
+            images: true,
+            sizes: true
+          }
+        }
       }
     })
     
@@ -26,11 +32,12 @@ export async function GET(
 // delete and update functions
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params
     const live = await prisma.live.delete({
-      where: { id: params.id }
+      where: { id }
     })
     return NextResponse.json(live)
   } catch (error) {
@@ -40,12 +47,13 @@ export async function DELETE(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const data = await request.json()
+    const { id } = await context.params
     const live = await prisma.live.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         title: data.title,
         description: data.description,

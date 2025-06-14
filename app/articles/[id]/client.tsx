@@ -7,6 +7,7 @@ import { useCart } from '@/lib/use-cart';
 import { Heart, Share2, Plus } from 'lucide-react';
 import { Prisma } from '@prisma/client';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 interface ArticleClientProps {
   article: Prisma.ArticleGetPayload<{
@@ -23,7 +24,7 @@ export function ArticleClient({ article }: ArticleClientProps) {
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert('Please select a size');
+      toast.error('Please select a size');
       return;
     } 
 

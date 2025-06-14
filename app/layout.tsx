@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/navigation'
 import { CartProvider } from '@/lib/cart-context'
+import { Toaster } from 'sonner'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,6 +23,7 @@ export default function RootLayout({
         <CartProvider>
           <Navbar />
           <main>{children}</main>
+          <Toaster richColors position="top-center" />
         </CartProvider>
       </body>
     </html>

@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
-import { createOrder } from '../actions/orders';
+import { createOrder, validateOrderItem } from '@/app/actions/orders';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface CartItem {
   id: string;
@@ -48,33 +49,45 @@ export function CheckoutForm({ cartItems, totalAmount }: CheckoutFormProps) {
     setLoading(true);
 
     try {
-      const orderPromises = cartItems.map(item => {
-        const orderData = {
-          ...formData,
-          items: cartItems.map(cartItem => ({
-            articleId: cartItem.id,
-            quantity: cartItem.quantity,
-            price: cartItem.price
-          })),
-          total: totalAmount,
-          shippingCost: formData.country === 'Pakistan' ? 300 : 0,
-          status: 'PENDING' as const
-        };
+      const validationPromises = cartItems.map(item => 
+        validateOrderItem(item.id, item.selectedSize)
+      );
+      
+      const validationResults = await Promise.all(validationPromises);
+      const validationErrors = validationResults
+        .filter((result): result is { success: false; error: string } => !result.success)
+        .map(result => result.error);
 
-        return createOrder(orderData);
-      });
+      if (validationErrors.length > 0) {
+        validationErrors.forEach(error => {
+          toast.error(error)
+        });
+        return;
+      }
 
-      const results = await Promise.all(orderPromises);
-      const allSuccessful = results.every(result => result.success);
+      const orderData = {
+        ...formData,
+        items: cartItems.map(cartItem => ({
+          articleId: cartItem.id,
+          quantity: cartItem.quantity,
+          price: cartItem.price
+        })),
+        total: totalAmount,
+        shippingCost: formData.country === 'Pakistan' ? 300 : 0,
+        status: 'PENDING' as const
+      };
 
-      if (allSuccessful) {
+      const result = await createOrder(orderData);
+
+      if (result.success) {
+        toast.success('Order placed successfully!');
         router.push('/checkout/success');
       } else {
-        alert('Error placing some orders. Please try again.');
+        toast.error(result.error || 'Error placing order. Please try again.');
       }
     } catch (error) {
       console.error('Error placing order:', error);
-      alert('Error placing order. Please try again.');
+      toast.error('Error placing order. Please try again.');
     } finally {
       setLoading(false);
     }

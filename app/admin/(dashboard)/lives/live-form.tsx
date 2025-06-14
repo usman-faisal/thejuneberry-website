@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Prisma } from '@prisma/client'
 import { createLive, updateLive } from '@/app/actions/lives'
+import { toast } from 'sonner'
 
 interface LiveFormProps {
   onClose: () => void
@@ -42,11 +43,11 @@ export function LiveForm({ onClose, editingLive }: LiveFormProps) {
       if (result.success) {
         onClose()
       } else {
-        alert('Failed to save live: ' + (result.error || 'Unknown error'))
+        toast.error('Failed to save live: ' + (result.error || 'Unknown error'))
       }
     } catch (error) {
       console.error('Error saving live:', error)
-      alert('An error occurred while saving the live')
+      toast.error('An error occurred while saving the live')
     }
   }
 

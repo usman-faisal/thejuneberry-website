@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Live, Prisma } from '@prisma/client'
 import { createArticle, updateArticle } from '@/app/actions/articles'
 import { uploadToCloudinary } from '@/app/actions/upload'
+import { toast } from 'sonner'
 
 interface ImageUpload {
   file: File
@@ -111,7 +112,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
 
     const hasFailures = results.some(result => result.status === 'rejected')
     if (hasFailures) {
-      alert('Some images failed to upload. Please review and try again.')
+      toast.error('Some images failed to upload. Please review and try again.')
       setUploadingImages(false)
       throw new Error('Image upload failed')
     }
@@ -195,11 +196,11 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
         onClose()
       } else {
         console.error('Error saving article:', result.error)
-        alert('Failed to save article: ' + (result.error || 'Unknown error'))
+        toast.error('Failed to save article: ' + (result.error || 'Unknown error'))
       }
     } catch (error) {
       console.error('Error in submission process:', error)
-      alert('An error occurred while saving the article')
+      toast('An error occurred while saving the article')
     } finally {
       setUploadingImages(false)
     }

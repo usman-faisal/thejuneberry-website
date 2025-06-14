@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/lib/use-cart';
 import { ShoppingCart, Check, Plus } from 'lucide-react';
 import { Prisma } from '@prisma/client';
+import { toast } from 'sonner';
 
 interface AddToCartButtonProps {
   article: Prisma.ArticleGetPayload<{
@@ -28,7 +29,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert('Please select size and color');
+      toast.error('Please select size and color');
       return;
     }
     addToCart({

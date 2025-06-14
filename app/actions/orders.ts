@@ -105,6 +105,30 @@ export async function updateOrderStatus(id: string, status: OrderFormData['statu
   }
 }
 
+export async function validateOrderItem(articleId: string, selectedSize: string) {
+  const article = await prisma.article.findUnique({
+    where: { id: articleId },
+    include: {
+      sizes: true
+    }
+  });
+
+  if (!article) {
+    return { success: false, error: `Article not found. Please remove it from your found` };
+  }
+
+  if (!article.inStock) {
+    return { success: false, error: `${article.name} is out of stock. Please remove it from your cart` };
+  }
+
+  const sizeExists = article.sizes.some(size => size.size === selectedSize);
+  if (!sizeExists) {
+    return { success: false, error: `Selected size is not available for ${article.name}. Please remove it from your cart` };
+  }
+
+  return { success: true, article};
+}
+
 export async function createOrder(data: OrderFormData) {
   try {
     const order = await prisma.order.create({

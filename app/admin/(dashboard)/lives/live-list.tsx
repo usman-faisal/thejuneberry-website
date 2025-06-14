@@ -5,6 +5,7 @@ import { Edit, Trash2, Calendar, Play, Plus } from 'lucide-react'
 import { Prisma } from '@prisma/client'
 import { LiveForm } from './live-form'
 import { deleteLive } from '@/app/actions/lives'
+import { toast } from 'sonner'
 
 interface LiveListProps {
   initialLives: Prisma.LiveGetPayload<{
@@ -26,11 +27,11 @@ export function LiveList({ initialLives }: LiveListProps) {
         if (result.success) {
           setLives(lives.filter(live => live.id !== id))
         } else {
-          alert('Failed to delete live: ' + (result.error || 'Unknown error'))
+          toast.error('Failed to delete live: ' + (result.error || 'Unknown error'))
         }
       } catch (error) {
         console.error('Error deleting live:', error)
-        alert('An error occurred while deleting the live')
+        toast.error('An error occurred while deleting the live')
       }
     }
   }

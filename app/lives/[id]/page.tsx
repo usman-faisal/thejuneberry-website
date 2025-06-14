@@ -4,6 +4,17 @@ import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 
+function getEmbedUrl(url: string): string {
+  if (url.includes('youtube.com/watch?v=')) {
+    const urlObj = new URL(url);
+    const videoId = urlObj.searchParams.get('v');
+    // Add modestbranding, autohide, showinfo, and controls for a cleaner embed
+    return `https://www.youtube.com/embed/${videoId}?modestbranding=1&autohide=1&showinfo=0&controls=1`;
+  }
+  // Extend this for other video platforms if needed
+  return url;
+}
+
 interface PageProps {
   params: Promise<{
     id: string
@@ -42,8 +53,9 @@ export default async function LiveDetailPage({ params }: PageProps) {
                 src={live.thumbnail} 
                 alt={live.title}
                 className="w-full h-full object-cover"
-                width={150}
-                height={150}
+                width={250}
+                height={250}
+                priority
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -65,13 +77,14 @@ export default async function LiveDetailPage({ params }: PageProps) {
             )}
             
             {live.videoUrl && (
-              // iframe
               <div className="aspect-video mb-6">
                 <iframe
-                  src={live.videoUrl}
+                  src={getEmbedUrl(live.videoUrl)}
                   title={live.title}
                   className="w-full h-full"
                   allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  frameBorder="0"
                 ></iframe>
               </div>
             )}

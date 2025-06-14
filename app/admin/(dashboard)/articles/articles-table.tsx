@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Live, Prisma } from '@prisma/client'
 import { useState } from 'react'
 import { ArticleForm } from './article-form'
+import { toast } from 'sonner'
 
 interface ArticlesTableProps {
   articles: Prisma.ArticleGetPayload<{
@@ -30,7 +31,7 @@ export function ArticlesTable({ articles, onEdit, onDelete, lives }: ArticlesTab
         await onDelete(id)
       } catch (error) {
         console.error('Error deleting article:', error)
-        alert('Failed to delete article')
+        toast.error('Failed to delete article')
       } finally {
         setIsDeleting(false)
       }

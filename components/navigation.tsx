@@ -13,6 +13,7 @@ const Navbar = () => {
   const pathname = usePathname();
   const { totalItems } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
     { href: '/', label: 'Home' },
@@ -64,9 +65,17 @@ const Navbar = () => {
 
               {/* Mobile Menu Button */}
               <div className="md:hidden">
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    {isMobileMenuOpen ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    )}
                   </svg>
                 </Button>
               </div>
@@ -74,24 +83,27 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Navigation */}
-          <div className="md:hidden py-4 border-t">
-            <div className="flex flex-col space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    pathname === item.href
-                      ? "text-pink-600 bg-pink-50"
-                      : "text-gray-700 hover:text-pink-600 hover:bg-pink-50"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              ))}
+          {isMobileMenuOpen && (
+            <div className="md:hidden py-4 border-t">
+              <div className="flex flex-col space-y-2">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={cn(
+                      "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      pathname === item.href
+                        ? "text-pink-600 bg-pink-50"
+                        : "text-gray-700 hover:text-pink-600 hover:bg-pink-50"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </nav>
 

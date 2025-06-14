@@ -8,18 +8,8 @@ import { useCart } from '@/lib/use-cart';
 import { ArrowLeft, ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import Link from 'next/link';
 
-interface CheckoutData {
-  articleId: string;
-  articleName: string;
-  price: number;
-  selectedSize: string;
-  image: string;
-  quantity: number;
-}
 
 export default function CheckoutPage() {
-  const [checkoutType, setCheckoutType] = useState<'single' | 'cart'>('cart');
-  const [singleItemData, setSingleItemData] = useState<CheckoutData | null>(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',
@@ -34,25 +24,10 @@ export default function CheckoutPage() {
   const { items: cartItems, totalPrice: cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
 
   const provinces = [
-    'Punjab', 'Sindh', 'Khyber Pakhtunkhwa', 'Balochistan', 
+    'Punjab', 'Sindh', 'Khyber Pakhtunkhwa', 'Balochistan',
     'Gilgit-Baltistan', 'Azad Kashmir', 'Islamabad Capital Territory'
   ];
 
-  useEffect(() => {
-    // Check for single item checkout data
-    const singleData = localStorage.getItem('checkoutData');
-    const cartData = localStorage.getItem('checkoutCartData');
-    
-    if (singleData) {
-      setSingleItemData(JSON.parse(singleData));
-      setCheckoutType('single');
-    } else if (cartItems.length > 0) {
-      setCheckoutType('cart');
-    } else {
-      // No items to checkout
-      setCheckoutType('cart');
-    }
-  }, [cartItems]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -63,17 +38,15 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const itemsToOrder = checkoutType === 'single' && singleItemData 
-      ? [singleItemData] 
-      : cartItems.map(item => ({
-          articleId: item.id,
-          articleName: item.name,
-          price: item.price,
-          selectedSize: item.selectedSize,
-          image: item.image,
-          quantity: item.quantity
-        }));
+
+    const itemsToOrder = cartItems.map(item => ({
+      articleId: item.id,
+      articleName: item.name,
+      price: item.price,
+      selectedSize: item.selectedSize,
+      image: item.image,
+      quantity: item.quantity
+    }));
 
     if (itemsToOrder.length === 0) return;
 
@@ -86,7 +59,8 @@ export default function CheckoutPage() {
           article: item.articleId,
           selectedSize: item.selectedSize,
           quantity: item.quantity,
-          totalAmount: item.price * item.quantity
+          totalAmount: item.price * item.quantity,
+          items: itemsToOrder,
         };
 
         return fetch('/api/orders', {
@@ -103,16 +77,14 @@ export default function CheckoutPage() {
 
       if (allSuccessful) {
         alert('Order(s) placed successfully! We will contact you soon.');
-        
+
         // Clear checkout data
         localStorage.removeItem('checkoutData');
         localStorage.removeItem('checkoutCartData');
-        
-        if (checkoutType === 'cart') {
-          clearCart();
-        }
-        
-        window.location.href = '/';
+
+        clearCart();
+
+        window.location.href = '/checkout/success';
       } else {
         alert('Error placing some orders. Please try again.');
       }
@@ -124,10 +96,8 @@ export default function CheckoutPage() {
     }
   };
 
-  const itemsToDisplay = checkoutType === 'single' && singleItemData ? [singleItemData] : cartItems;
-  const totalAmount = checkoutType === 'single' && singleItemData 
-    ? singleItemData.price * singleItemData.quantity 
-    : cartTotal;
+  const itemsToDisplay = cartItems;
+  const totalAmount = cartTotal;
 
   if (itemsToDisplay.length === 0) {
     return (
@@ -164,7 +134,7 @@ export default function CheckoutPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {itemsToDisplay.map((item, index) => {
-                const itemKey = checkoutType === 'single' ? `single-${index}` : `${item.id}-${item.selectedSize}`;
+                const itemKey = `${item.id}-${item.selectedSize}`;
                 return (
                   <div key={itemKey} className="flex items-center space-x-4 p-4 border rounded-lg">
                     <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
@@ -173,7 +143,7 @@ export default function CheckoutPage() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    
+
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{item.name}</h3>
                       <p className="text-sm text-gray-600">
@@ -182,46 +152,39 @@ export default function CheckoutPage() {
                       <p className="text-lg font-semibold text-pink-600">
                         Rs. {item.price.toLocaleString()}
                       </p>
-                      
+
                       {/* Quantity Controls for Cart Checkout */}
-                      {checkoutType === 'cart' && (
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity - 1)}
-                              disabled={item.quantity <= 1}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="w-8 text-center">{item.quantity}</span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity + 1)}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center space-x-2">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            onClick={() => removeFromCart(item.id, item.selectedSize)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-8 text-center">{item.quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity + 1)}
+                          >
+                            <Plus className="h-3 w-3" />
                           </Button>
                         </div>
-                      )}
-                      
-                      {/* Quantity Display for Single Item Checkout */}
-                      {checkoutType === 'single' && (
-                        <p className="text-sm text-gray-600 mt-2">
-                          Quantity: {item.quantity}
-                        </p>
-                      )}
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFromCart(item.id, item.selectedSize)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+
                     </div>
                   </div>
                 );

@@ -61,25 +61,6 @@ export default function ArticlePage() {
     setQuantity(1);
   };
 
-  const handleBuyNow = () => {
-    if (!selectedSize) {
-      alert('Please select size and color');
-      return;
-    }
-    
-    const checkoutData = {
-      articleId: article?.id,
-      articleName: article?.name,
-      price: article?.price,
-      selectedSize,
-      image: article?.images[0],
-      quantity,
-    };
-    
-    localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-    window.location.href = '/checkout';
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -227,15 +208,6 @@ export default function ArticlePage() {
                   >
                     <Plus className="mr-2 h-5 w-5" />
                     Add to Cart
-                  </Button>
-                  <Button 
-                    onClick={handleBuyNow}
-                    size="lg" 
-                    className="flex-1 bg-pink-600 hover:bg-pink-700"
-                    disabled={!selectedSize}
-                  >
-                    <ShoppingCart className="mr-2 h-5 w-5" />
-                    Buy Now
                   </Button>
                 </div>
               ) : (

@@ -3,12 +3,10 @@
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { ArticleForm } from './article-form'
-import { Prisma } from '@prisma/client'
+import { Live, Prisma } from '@prisma/client'
 
 interface ArticleActionsProps {
-  lives: Prisma.LiveGetPayload<{
-    include: { articles: true };
-  }>[]
+  lives: Live[]
 }
 
 export function ArticleActions({ lives }: ArticleActionsProps) {

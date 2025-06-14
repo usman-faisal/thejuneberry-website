@@ -13,7 +13,6 @@ async function getStats() {
     if ('error' in lives || 'error' in orders) {
       throw new Error('API request failed')
     }
-    console.log(orders)
     return {
       totalLives: Array.isArray(lives.lives) ? lives.lives.length : 0,
       totalOrders: Array.isArray(orders.orders) ? orders.orders.length : 0,

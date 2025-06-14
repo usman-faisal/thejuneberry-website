@@ -44,6 +44,7 @@ export async function createLive(data: LiveFormData) {
     })
 
     revalidatePath('/admin/lives')
+    revalidatePath('/lives')
     return { success: true, live }
   } catch (error) {
     console.error('Error creating live:', error)
@@ -68,6 +69,7 @@ export async function updateLive(id: string, data: LiveFormData) {
     })
 
     revalidatePath('/admin/lives')
+    revalidatePath('/lives')
     return { success: true, live }
   } catch (error) {
     console.error('Error updating live:', error)
@@ -82,6 +84,7 @@ export async function deleteLive(id: string) {
     })
 
     revalidatePath('/admin/lives')
+    revalidatePath('/lives')
     return { success: true }
   } catch (error) {
     console.error('Error deleting live:', error)

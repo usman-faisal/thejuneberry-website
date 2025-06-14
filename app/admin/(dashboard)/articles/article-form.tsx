@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Plus, Upload, X, ImageIcon } from 'lucide-react'
 import Image from 'next/image'
-import { Prisma } from '@prisma/client'
+import { Live, Prisma } from '@prisma/client'
 import { createArticle, updateArticle } from '@/app/actions/articles'
 
 interface ImageUpload {
@@ -21,9 +21,7 @@ interface ArticleFormProps {
   editingArticle?: Prisma.ArticleGetPayload<{
     include: { images: true, sizes: true };
   }>
-  lives: Prisma.LiveGetPayload<{
-    include: { articles: true };
-  }>[]
+  lives: Live[]
 }
 
 interface ArticleImage {

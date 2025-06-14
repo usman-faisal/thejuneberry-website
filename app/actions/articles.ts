@@ -50,6 +50,7 @@ export async function createArticle(data: ArticleFormData) {
     })
 
     revalidatePath('/admin/articles')
+    revalidatePath(`/articles`)
     return { success: true, article }
   } catch (error) {
     console.error('Error creating article:', error)
@@ -95,6 +96,7 @@ export async function updateArticle(id: string, data: ArticleFormData) {
     })
 
     revalidatePath('/admin/articles')
+    revalidatePath(`/articles`)
     return { success: true, article }
   } catch (error) {
     console.error('Error updating article:', error)

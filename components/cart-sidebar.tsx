@@ -25,11 +25,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   };
 
   if (!isOpen) return null;
-  console.log(
-    "Cart items:", items, 
-    "Total items:", totalItems, 
-    "Total price:", totalPrice
-  )
+
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={onClose}>
       <div 

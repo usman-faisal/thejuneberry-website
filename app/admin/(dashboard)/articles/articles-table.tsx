@@ -2,7 +2,7 @@
 
 import { Edit, Trash2, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
-import { Prisma } from '@prisma/client'
+import { Live, Prisma } from '@prisma/client'
 import { useState } from 'react'
 import { ArticleForm } from './article-form'
 
@@ -14,9 +14,10 @@ interface ArticlesTableProps {
     include: { images: true, sizes: true };
   }>) => void
   onDelete: (id: string) => void
+  lives: Live[]
 }
 
-export function ArticlesTable({ articles, onEdit, onDelete }: ArticlesTableProps) {
+export function ArticlesTable({ articles, onEdit, onDelete, lives }: ArticlesTableProps) {
   const [editingArticle, setEditingArticle] = useState<Prisma.ArticleGetPayload<{
     include: { images: true, sizes: true };
   }> | null>(null)
@@ -152,7 +153,7 @@ export function ArticlesTable({ articles, onEdit, onDelete }: ArticlesTableProps
         <ArticleForm
           onClose={() => setEditingArticle(null)}
           editingArticle={editingArticle}
-          lives={[]}
+          lives={lives}
         />
       )}
     </div>

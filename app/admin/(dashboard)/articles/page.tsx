@@ -15,11 +15,7 @@ export default async function AdminArticlesPage() {
     }
   })
 
-  const lives = await prisma.live.findMany({
-    include: {
-      articles: true,
-    },
-  })
+  const lives = await prisma.live.findMany()
 
   async function handleEdit(article: any) {
     'use server'
@@ -68,6 +64,7 @@ export default async function AdminArticlesPage() {
 
       <div className="bg-white rounded-lg shadow-sm">
         <ArticlesTable 
+          lives={lives}
           articles={articles} 
           onEdit={handleEdit}
           onDelete={handleDelete}

@@ -13,7 +13,6 @@ export const useCart = () => {
     selectedSize: string;
     quantity?: number;
   }) => {
-    console.log(item, 'alkdsfjskldjfkl')
     dispatch({
       type: 'ADD_ITEM',
       payload: {

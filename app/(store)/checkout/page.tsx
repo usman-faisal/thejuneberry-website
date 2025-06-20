@@ -2,6 +2,22 @@ import { ArrowLeft, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { CheckoutForm } from './checkout-form';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Checkout - Complete Your Order',
+  description: 'Complete your purchase of premium Pakistani dresses. Secure checkout process with multiple payment options and delivery across Pakistan.',
+  robots: {
+    index: false, // Don't index checkout pages
+    follow: false,
+  },
+  openGraph: {
+    title: 'Checkout - TheJuneBerry',
+    description: 'Complete your purchase of premium Pakistani dresses',
+    url: 'https://thejuneberry.vercel.app/checkout',
+  },
+}
+
 
 export default async function CheckoutPage() {
   const cookieStore = await cookies();

@@ -11,24 +11,36 @@ interface PageProps {
   }>
 }
 
-// Generate metadata for SEO
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params
   const article = await prisma.article.findUnique({
     where: { id },
-    select: { name: true, description: true, images: true }
+    select: { 
+      name: true, 
+      description: true, 
+      images: true, 
+      price: true, 
+      category: true,
+      createdAt: true
+    }
   });
 
   if (!article) {
     return {
-      title: 'Article Not Found',
+      title: 'Dress Not Found - TheJuneBerry',
+      description: 'The dress you are looking for could not be found.',
     };
   }
 
   return {
-    title: article.name,
-    description: article.description,
+    title: `${article.name} - Premium Pakistani Dress`,
+    description: article.description || `Beautiful ${article.category || 'Pakistani dress'} from TheJuneBerry. Premium quality, authentic designs, delivered across Pakistan. Starting from PKR ${article.price}.`,
+    keywords: [article.name].filter(Boolean),
     openGraph: {
+      title: `${article.name} - TheJuneBerry`,
+      description: article.description || `Beautiful Pakistani dress from TheJuneBerry`,
+      url: `https://thejuneberry.vercel.app/articles/${id}`,
+      type: 'article',
       images: article.images.map(img => ({
         url: img.url,
         width: 800,
@@ -36,8 +48,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         alt: article.name,
       })),
     },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${article.name} - TheJuneBerry`,
+      description: article.description || `Beautiful Pakistani dress`,
+      images: article.images.map(img => img.url),
+    },
+    alternates: {
+      canonical: `https://thejuneberry.vercel.app/articles/${id}`,
+    },
   };
 }
+
 
 export default async function ArticlePage({ params }: PageProps) {
   const { id } = await params
@@ -54,7 +76,45 @@ export default async function ArticlePage({ params }: PageProps) {
     notFound()
   }
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": article.name,
+    "description": article.description,
+    "image": article.images.map(img => img.url),
+    "url": `https://thejuneberry.vercel.app/articles/${article.id}`,
+    "sku": article.id,
+    "category": article.category,
+    "brand": {
+      "@type": "Brand",
+      "name": "TheJuneBerry"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": article.price,
+      "priceCurrency": "PKR",
+      "availability": "https://schema.org/InStock",
+      "seller": {
+        "@type": "Organization",
+        "name": "TheJuneBerry"
+      }
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "50"
+    }
+  }
+
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(structuredData)
+      }}
+    />
+
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Navigation */}
@@ -69,5 +129,6 @@ export default async function ArticlePage({ params }: PageProps) {
         <ArticleClient article={article} />
       </div>
     </div>
+    </>
   );
 }

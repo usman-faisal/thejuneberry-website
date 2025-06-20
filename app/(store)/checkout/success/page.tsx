@@ -1,6 +1,21 @@
 import Link from 'next/link'
 import { CheckCircle } from 'lucide-react'
-import { cookies } from 'next/headers'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Order Confirmed - Thank You!',
+  description: 'Your order has been successfully placed. We will contact you soon to confirm your purchase and arrange delivery.',
+  robots: {
+    index: false, // Don't index success pages
+    follow: false,
+  },
+  openGraph: {
+    title: 'Order Confirmed - TheJuneBerry',
+    description: 'Your order has been successfully placed',
+    url: 'https://thejuneberry.vercel.app/checkout/success',
+  },
+}
+
 
 export default async function CheckoutSuccessPage() {
   return (

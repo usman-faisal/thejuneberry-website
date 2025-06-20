@@ -128,13 +128,6 @@ export default function ArticleList({  articles
                 {article.inStock ? 'In Stock' : 'Out of Stock'}
               </span>
             </div>
-            
-            {/* Quick Add to Cart Button */}
-            {article.inStock && (
-              <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-pink-600 hover:bg-pink-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium">
-                Quick Add
-              </button>
-            )}
           </div>
         </div>
       </Link>

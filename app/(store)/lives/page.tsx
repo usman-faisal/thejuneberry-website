@@ -2,6 +2,35 @@ import Link from 'next/link'
 import { Calendar, Play, Users, Clock } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Live Fashion Sessions - Watch & Shop Pakistani Dresses',
+  description: 'Watch our exclusive live fashion showcases featuring premium Pakistani dresses. Interactive shopping experience with real-time styling tips and instant purchasing.',
+  keywords: ['live fashion shows', 'Pakistani dress showcase', 'interactive shopping', 'fashion live streaming', 'dress collection Pakistan'],
+  openGraph: {
+    title: 'Live Fashion Sessions - TheJuneBerry',
+    description: 'Watch exclusive live fashion showcases featuring premium Pakistani dresses. Interactive shopping with real-time styling tips.',
+    url: 'https://thejuneberry.vercel.app/lives',
+    images: [
+      {
+        url: '/images/lives-og.jpg', // Create this image
+        width: 1200,
+        height: 630,
+        alt: 'TheJuneBerry Live Fashion Sessions',
+      }
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Live Fashion Sessions - TheJuneBerry',
+    description: 'Watch exclusive live fashion showcases featuring premium Pakistani dresses.',
+    images: ['/images/lives-og.jpg'],
+  },
+  alternates: {
+    canonical: 'https://thejuneberry.vercel.app/lives',
+  },
+}
 
 export default async function LivesPage() {
   const lives = await prisma.live.findMany({
@@ -29,7 +58,33 @@ export default async function LivesPage() {
     }).format(date)
   }
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Live Fashion Sessions",
+    "description": "Exclusive live fashion showcases by TheJuneBerry",
+    "numberOfItems": lives.length,
+    "itemListElement": lives.map((live, index) => ({
+      "@type": "VideoObject",
+      "position": index + 1,
+      "name": live.title,
+      "description": live.description,
+      "thumbnailUrl": live.thumbnail,
+      "uploadDate": live.date.toISOString(),
+      "url": `https://thejuneberry.vercel.app/lives/${live.id}`
+    }))
+  }
+
+
   return (
+    <>
+    <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(structuredData)
+    }}
+  />
+
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Simple Header */}
@@ -173,5 +228,6 @@ export default async function LivesPage() {
         )}
       </div>
     </div>
+    </>
   )
 }

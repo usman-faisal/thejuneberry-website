@@ -2,9 +2,64 @@ import Link from 'next/link'
 import { Play, ShoppingBag, Sparkles, Heart, Star, Users } from 'lucide-react'
 import Image from 'next/image'
 import ProductHighlights from '../components/product-highlights'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'TheJuneBerry - Premium Pakistani Dresses & Live Fashion Shows',
+  description: 'Experience authentic Pakistani fashion through exclusive live showcases. Shop premium dresses, traditional and modern styles delivered across Pakistan. Join 10K+ fashion enthusiasts.',
+  keywords: ['Pakistani dresses online', 'live fashion shows', 'premium clothing Pakistan', 'traditional Pakistani wear', 'modern dresses Pakistan', 'online shopping Pakistan'],
+  openGraph: {
+    title: 'TheJuneBerry - Premium Pakistani Dresses & Live Fashion Shows',
+    description: 'Experience authentic Pakistani fashion through exclusive live showcases. Shop premium dresses delivered across Pakistan.',
+    url: 'https://thejuneberry.vercel.app',
+    images: [
+      {
+        url: '/images/hero-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'TheJuneBerry Premium Pakistani Fashion Collection',
+      }
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TheJuneBerry - Premium Pakistani Dresses & Live Fashion Shows',
+    description: 'Experience authentic Pakistani fashion through exclusive live showcases.',
+    images: ['/images/hero-image.jpg'],
+  },
+  alternates: {
+    canonical: 'https://thejuneberry.vercel.app',
+  },
+}
+
 
 export default function HomePage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "TheJuneBerry",
+    "description": "Premium Pakistani fashion and dresses",
+    "url": "https://thejuneberry.vercel.app",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://thejuneberry.vercel.app/articles?search={search_term_string}",
+      "query-input": "required name=search_term_string"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TheJuneBerry",
+      "logo": "https://thejuneberry.vercel.app/images/favicon.jpg"
+    }
+  }
   return (
+    <>
+    <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(structuredData)
+    }}
+  />
+
     <div className="min-h-screen">
       {/* Hero Section - Mobile First */}
       <section className="relative min-h-screen flex items-center overflow-hidden px-4 py-8 sm:py-12 lg:py-0">
@@ -203,5 +258,6 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+    </>
   )
 }

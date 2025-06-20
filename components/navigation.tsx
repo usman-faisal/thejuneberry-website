@@ -98,16 +98,13 @@ const Navbar = () => {
                     href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(
-                      "px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 relative",
+                      "px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                       pathname === item.href
                         ? "text-pink-600 bg-pink-50 shadow-sm"
                         : "text-gray-700 hover:text-pink-600 hover:bg-gray-50"
                     )}
                   >
-                    {item.label}
-                    {pathname === item.href && (
-                      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-pink-600 to-orange-500"></div>
-                    )}
+                      {item.label}
                   </Link>
                 ))}
               </div>

@@ -1,19 +1,21 @@
 import Link from 'next/link'
 import { Play, ShoppingBag, Sparkles, Heart, Star, Users } from 'lucide-react'
 import Image from 'next/image'
+import ProductHighlights from '../components/product-highlights'
 
 export default function HomePage() {
   return (
     <div className="min-h-screen">
-      {/* Hero Section with Split Layout */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50">
-          <div className="absolute inset-0 opacity-10">
+      {/* Hero Section - Mobile First */}
+      <section className="relative min-h-screen flex items-center overflow-hidden px-4 py-8 sm:py-12 lg:py-0">
+        {/* Enhanced Mobile Background */}
+        <div className="absolute inset-0 bg-gradient-to-b sm:bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50">
+          <div className="absolute inset-0 opacity-5 sm:opacity-10">
             <svg className="w-full h-full" viewBox="0 0 100 100" fill="none">
               <defs>
-                <pattern id="floral" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <circle cx="10" cy="10" r="1" fill="currentColor" className="text-pink-300"/>
+                <pattern id="floral" x="0" y="0" width="15" height="15" patternUnits="userSpaceOnUse">
+                  <circle cx="7.5" cy="7.5" r="0.8" fill="currentColor" className="text-pink-300"/>
+                  <circle cx="2" cy="2" r="0.4" fill="currentColor" className="text-orange-300"/>
                 </pattern>
               </defs>
               <rect width="100" height="100" fill="url(#floral)"/>
@@ -21,70 +23,73 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left Content */}
-            <div className="text-left space-y-8">
-              <div className="space-y-4">
-                <div className="inline-flex items-center px-4 py-2 bg-pink-100 text-pink-800 rounded-full text-sm font-medium">
-                  ✨ Featured Collection
+        <div className="relative z-10 max-w-7xl mx-auto w-full">
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Mobile-First Content */}
+            <div className="text-center lg:text-left space-y-6 sm:space-y-8 order-2 lg:order-1">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 bg-pink-100 text-pink-800 rounded-full text-xs sm:text-sm font-medium shadow-sm">
+                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Featured Collection
                 </div>
-                <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 leading-tight">
+                
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 leading-tight">
                   Discover
-                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-orange-500">
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-orange-500 mt-1">
                     TheJuneBerry
                   </span>
                 </h1>
-                <p className="text-xl text-gray-600 max-w-lg leading-relaxed">
+                
+                <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-md mx-auto lg:mx-0 leading-relaxed">
                   Experience authentic Pakistani fashion through our exclusive live showcases. 
                   From traditional elegance to modern styles, find your perfect dress.
                 </p>
               </div>
 
-              {/* Stats */}
-              <div className="flex gap-8">
+              {/* Mobile-Optimized Stats */}
+              <div className="grid grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-sm mx-auto lg:mx-0">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-pink-600">500+</div>
-                  <div className="text-sm text-gray-500">Happy Customers</div>
+                  <div className="text-xl sm:text-2xl font-bold text-pink-600">500+</div>
+                  <div className="text-xs sm:text-sm text-gray-500">Happy Customers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-500">100+</div>
-                  <div className="text-sm text-gray-500">Live Sessions</div>
+                  <div className="text-xl sm:text-2xl font-bold text-orange-500">100+</div>
+                  <div className="text-xs sm:text-sm text-gray-500">Live Sessions</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">50+</div>
-                  <div className="text-sm text-gray-500">Cities Covered</div>
+                  <div className="text-xl sm:text-2xl font-bold text-purple-600">50+</div>
+                  <div className="text-xs sm:text-sm text-gray-500">Cities Covered</div>
                 </div>
               </div>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
+              {/* Mobile-First CTA Buttons */}
+              <div className="flex flex-col gap-3 sm:gap-4 max-w-sm mx-auto lg:mx-0">
                 <Link 
                   href="/lives"
-                  className="group inline-flex items-center px-8 py-4 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-2xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                  className="group flex items-center justify-center px-6 py-4 sm:px-8 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-2xl hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 active:scale-95 font-semibold"
                 >
-                  <Play className="mr-3 group-hover:scale-110 transition-transform" size={20} />
+                  <Play className="mr-3 group-hover:scale-110 transition-transform" size={18} />
                   Watch Live Shows
                 </Link>
                 <Link 
                   href="/articles"
-                  className="inline-flex items-center px-8 py-4 border-2 border-pink-600 text-pink-600 bg-white rounded-2xl hover:bg-pink-50 transition-all duration-300"
+                  className="flex items-center justify-center px-6 py-4 sm:px-8 border-2 border-pink-600 text-pink-600 bg-white/80 backdrop-blur-sm rounded-2xl hover:bg-pink-50 transition-all duration-300 active:scale-95 font-medium"
                 >
-                  <ShoppingBag className="mr-3" size={20} />
+                  <ShoppingBag className="mr-3" size={18} />
                   Browse Collection
                 </Link>
               </div>
             </div>
 
-            {/* Right Image */}
-            <div className="relative">
-              {/* Decorative Elements */}
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-pink-200 rounded-full opacity-60 animate-pulse"></div>
-              <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-orange-200 rounded-full opacity-40 animate-pulse delay-1000"></div>
+            {/* Mobile-Optimized Image Section */}
+            <div className="relative w-full max-w-sm sm:max-w-md lg:max-w-none mx-auto order-1 lg:order-2">
+              {/* Floating Elements */}
+              <div className="absolute -top-2 -right-2 sm:-top-4 sm:-right-4 w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-pink-200 rounded-full opacity-60 animate-pulse"></div>
+              <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 lg:-bottom-8 lg:-left-8 w-16 h-16 sm:w-20 sm:h-20 lg:w-32 lg:h-32 bg-orange-200 rounded-full opacity-40 animate-pulse delay-1000"></div>
               
-              {/* Main Image Container */}
-              <div className="relative bg-white rounded-3xl shadow-2xl p-4 transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                <div className="relative h-[600px] w-full rounded-2xl overflow-hidden">
+              {/* Main Image Container - Mobile Optimized */}
+              <div className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-2 sm:p-3 lg:p-4 transform rotate-1 hover:rotate-0 transition-transform duration-500">
+                <div className="relative h-80 sm:h-96 lg:h-[600px] w-full rounded-xl sm:rounded-2xl overflow-hidden">
                   <Image
                     src="/images/hero-image.jpg"
                     alt="Beautiful traditional orange dress with floral embroidery"
@@ -92,11 +97,11 @@ export default function HomePage() {
                     priority
                     className="object-cover object-center"
                   />
-                  {/* Overlay Badge */}
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full">
-                    <div className="flex items-center gap-2">
-                      <Star className="text-yellow-400 fill-current" size={16} />
-                      <span className="text-sm font-medium">Trending</span>
+                  {/* Mobile-Friendly Overlay Badge */}
+                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm">
+                    <div className="flex items-center gap-1.5">
+                      <Star className="text-yellow-400 fill-current" size={14} />
+                      <span className="text-xs sm:text-sm font-medium">Trending</span>
                     </div>
                   </div>
                 </div>
@@ -106,110 +111,92 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section with Enhanced Design */}
-      <section className="py-20 bg-white">
+      {/* Product Highlights Section - Mobile Enhanced */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Why Choose 
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-orange-500"> TheJuneBerry?</span>
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
+              Featured <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-orange-500">Products</span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              We bring you the latest Pakistani fashion trends through interactive live sessions, 
-              connecting you directly with quality designers and authentic styles.
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl lg:max-w-3xl mx-auto leading-relaxed px-4">
+              Explore a few of our latest arrivals. Find your perfect dress from our exclusive collection!
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="group text-center p-8 rounded-3xl bg-gradient-to-br from-pink-50 to-pink-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Play className="text-white" size={28} />
-              </div>
-              <h3 className="text-2xl font-bold mb-4 text-gray-900">Live Fashion Shows</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Join our exclusive Facebook live sessions where we showcase the latest dress collections with detailed styling tips and real-time interaction.
-              </p>
-            </div>
-            
-            <div className="group text-center p-8 rounded-3xl bg-gradient-to-br from-orange-50 to-orange-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Sparkles className="text-white" size={28} />
-              </div>
-              <h3 className="text-2xl font-bold mb-4 text-gray-900">Authentic Quality</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Handpicked traditional and contemporary dresses featuring genuine embroidery, premium fabrics, and authentic Pakistani craftsmanship.
-              </p>
-            </div>
-            
-            <div className="group text-center p-8 rounded-3xl bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <ShoppingBag className="text-white" size={28} />
-              </div>
-              <h3 className="text-2xl font-bold mb-4 text-gray-900">Nationwide Delivery</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Fast, secure, and reliable delivery service covering all major cities across Pakistan with careful packaging and tracking.
-              </p>
-            </div>
+          {/* Product Grid */}
+          <ProductHighlights />
+          
+          <div className="flex justify-center mt-8 sm:mt-10 px-4">
+            <Link 
+              href="/articles" 
+              className="inline-block px-6 py-4 sm:px-8 bg-gradient-to-r from-pink-600 to-orange-500 text-white rounded-2xl hover:shadow-xl transition-all font-semibold text-base sm:text-lg transform hover:-translate-y-1 active:scale-95"
+            >
+              View All Products
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Social Proof Section */}
-      <section className="py-16 bg-gradient-to-r from-pink-50 to-orange-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="grid md:grid-cols-3 gap-8 items-center">
-            <div className="flex items-center justify-center gap-4">
-              <Users className="text-pink-600" size={32} />
-              <div>
-                <div className="text-2xl font-bold text-gray-900">10K+</div>
-                <div className="text-gray-600">Facebook Followers</div>
+      {/* Social Proof Section - Mobile Optimized */}
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-pink-50 to-orange-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+            <div className="flex items-center justify-center gap-3 sm:gap-4 bg-white/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
+              <Users className="text-pink-600 flex-shrink-0" size={28} />
+              <div className="text-center sm:text-left">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">10K+</div>
+                <div className="text-sm sm:text-base text-gray-600">Facebook Followers</div>
               </div>
             </div>
-            <div className="flex items-center justify-center gap-4">
-              <Heart className="text-red-500" size={32} />
-              <div>
-                <div className="text-2xl font-bold text-gray-900">95%</div>
-                <div className="text-gray-600">Customer Satisfaction</div>
+            
+            <div className="flex items-center justify-center gap-3 sm:gap-4 bg-white/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
+              <Heart className="text-red-500 flex-shrink-0" size={28} />
+              <div className="text-center sm:text-left">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">95%</div>
+                <div className="text-sm sm:text-base text-gray-600">Customer Satisfaction</div>
               </div>
             </div>
-            <div className="flex items-center justify-center gap-4">
-              <Star className="text-yellow-500" size={32} />
-              <div>
-                <div className="text-2xl font-bold text-gray-900">4.9/5</div>
-                <div className="text-gray-600">Average Rating</div>
+            
+            <div className="flex items-center justify-center gap-3 sm:gap-4 bg-white/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
+              <Star className="text-yellow-500 flex-shrink-0" size={28} />
+              <div className="text-center sm:text-left">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">4.9/5</div>
+                <div className="text-sm sm:text-base text-gray-600">Average Rating</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Enhanced CTA Section */}
-      <section className="relative py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-pink-600 via-orange-500 to-purple-600"></div>
+      {/* Enhanced Mobile-First CTA Section */}
+      <section className="relative py-16 sm:py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-600 via-orange-500 to-purple-600"></div>
         <div className="absolute inset-0 bg-black/20"></div>
         
+        {/* Mobile-optimized content */}
         <div className="relative z-10 max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6 leading-tight">
             Ready to Discover Your 
-            <span className="block">Perfect Style?</span>
+            <span className="block mt-1">Perfect Style?</span>
           </h2>
-          <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg lg:text-xl text-white/90 mb-8 sm:mb-10 max-w-xl lg:max-w-2xl mx-auto leading-relaxed">
             Join thousands of fashion enthusiasts who trust TheJuneBerry for authentic Pakistani dresses. 
             Experience fashion like never before through our live interactive sessions.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          
+          <div className="flex flex-col gap-3 sm:gap-4 max-w-sm sm:max-w-md mx-auto sm:flex-row sm:justify-center">
             <Link 
               href="/lives"
-              className="inline-flex items-center px-8 py-4 bg-white text-pink-600 rounded-2xl hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-1 font-semibold"
+              className="flex items-center justify-center px-6 py-4 sm:px-8 bg-white text-pink-600 rounded-2xl hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-1 active:scale-95 font-semibold shadow-lg"
             >
-              <Play className="mr-3" size={20} />
+              <Play className="mr-3" size={18} />
               Join Live Session
             </Link>
             <Link 
               href="/articles"
-              className="inline-flex items-center px-8 py-4 border-2 border-white text-white bg-transparent rounded-2xl hover:bg-white hover:text-pink-600 transition-all duration-300"
+              className="flex items-center justify-center px-6 py-4 sm:px-8 border-2 border-white text-white bg-transparent rounded-2xl hover:bg-white hover:text-pink-600 transition-all duration-300 active:scale-95 font-medium"
             >
-              <ShoppingBag className="mr-3" size={20} />
+              <ShoppingBag className="mr-3" size={18} />
               Browse Collection
             </Link>
           </div>

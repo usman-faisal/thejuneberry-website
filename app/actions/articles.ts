@@ -1,5 +1,6 @@
 'use server'
 
+import cloudinary from '@/lib/cloudinary'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
@@ -58,12 +59,29 @@ export async function createArticle(data: ArticleFormData) {
   }
 }
 
+async function deleteImages(images: ArticleImage[]) {
+  try {
+    await Promise.all(
+      images.map(async (image) => {
+        if (image.public_id) {
+          await cloudinary.uploader.destroy(image.public_id);
+        }
+        await prisma.image.delete({
+          where: { id: image.id }
+        });
+      })
+    );
+  } catch (error) {
+    console.error('Error deleting images:', error);
+  }
+}
+
 export async function updateArticle(id: string, data: ArticleFormData) {
   try {
-    // First delete existing images and sizes
-    await prisma.image.deleteMany({
+    const images = await prisma.image.findMany({
       where: { articleId: id }
     })
+    await deleteImages(images)
     await prisma.articleSize.deleteMany({
       where: { articleId: id }
     })

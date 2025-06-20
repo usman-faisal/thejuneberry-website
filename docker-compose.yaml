@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       PGDATA: /data/postgres
-      POSTGRES_DB: postgres
+      POSTGRES_DB: juneberry
     volumes:
       - postgres:/data/postgres
     ports:

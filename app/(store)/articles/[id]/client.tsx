@@ -53,8 +53,8 @@ export function ArticleClient({ article }: ArticleClientProps) {
             src={article.images[selectedImage].url}
             alt={article.name}
             className="w-full h-full object-cover"
-            width={400}
-            height={400}
+            width={1920}
+            height={1080}
             priority
           />
         </div>
@@ -73,8 +73,8 @@ export function ArticleClient({ article }: ArticleClientProps) {
                   src={image.url}
                   alt={`${article.name} ${index + 1}`}
                   className="w-full h-full object-cover"
-                  width={200}
-                  height={200}
+                  width={1280}
+                  height={720}
                 />
               </button>
             ))}
@@ -183,10 +183,9 @@ export function ArticleClient({ article }: ArticleClientProps) {
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Information</h3>
             <ul className="space-y-2 text-gray-600">
-              <li>• Free delivery across Pakistan</li>
-              <li>• Delivery within 3-7 business days</li>
+              <li>• Delivery costs 300 RPS in Pakistan</li>
+              <li>• If you live abroad we will contact you for delivery fees</li>
               <li>• Cash on delivery available</li>
-              <li>• Easy returns within 7 days</li>
             </ul>
           </CardContent>
         </Card>

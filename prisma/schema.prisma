@@ -17,6 +17,7 @@ model Live {
   date        DateTime
   videoUrl    String?
   thumbnail   String?
+  thumbnail_public_id String?
   articles    Article[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

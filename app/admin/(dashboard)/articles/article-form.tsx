@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Upload, X, ImageIcon } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Plus, Upload, X, ImageIcon, Loader2, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 import { Live, Prisma } from '@prisma/client'
 import { createArticle, updateArticle } from '@/app/actions/articles'
@@ -9,6 +9,7 @@ import { uploadToCloudinary } from '@/app/actions/upload'
 import { toast } from 'sonner'
 
 interface ImageUpload {
+  id: string
   file: File
   preview: string
   uploading: boolean
@@ -34,9 +35,11 @@ interface ArticleImage {
 }
 
 export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [imageUploads, setImageUploads] = useState<ImageUpload[]>([])
-  const [uploadingImages, setUploadingImages] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [newSize, setNewSize] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const [formData, setFormData] = useState({
     name: editingArticle?.name || '',
@@ -48,6 +51,25 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
     inStock: editingArticle?.inStock ?? true,
     liveId: editingArticle?.liveId || ''
   })
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Article name is required'
+    }
+
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      newErrors.price = 'Valid price is required'
+    }
+
+    if (formData.images.length === 0 && imageUploads.length === 0) {
+      newErrors.images = 'At least one image is required'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleImageUpload = async (file: File): Promise<{ url: string, public_id: string }> => {
     const formData = new FormData()
@@ -66,7 +88,21 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
     const files = e.target.files
     if (!files) return
 
-    const newUploads: ImageUpload[] = Array.from(files).map(file => ({
+    // Validate file types and sizes
+    const validFiles = Array.from(files).filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not a valid image file`)
+        return false
+      }
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        toast.error(`${file.name} is too large. Maximum size is 10MB`)
+        return false
+      }
+      return true
+    })
+
+    const newUploads: ImageUpload[] = validFiles.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
       file,
       preview: URL.createObjectURL(file),
       uploading: false,
@@ -74,16 +110,25 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
     }))
 
     setImageUploads(prev => [...prev, ...newUploads])
+    
+    // Clear errors if images are added
+    if (newUploads.length > 0) {
+      setErrors(prev => ({ ...prev, images: '' }))
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   const uploadImages = async (): Promise<{ url: string, public_id: string }[]> => {
-    const pendingUploads = imageUploads.filter(upload => !upload.uploaded && !upload.uploading)
+    const pendingUploads = imageUploads.filter(upload => !upload.uploaded && !upload.error)
     if (pendingUploads.length === 0) {
       return []
     }
 
-    setUploadingImages(true)
-
+    // Set uploading state
     setImageUploads(prev => prev.map(u =>
       pendingUploads.includes(u) ? { ...u, uploading: true } : u
     ))
@@ -92,38 +137,37 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
       try {
         const { url, public_id } = await handleImageUpload(upload.file)
         setImageUploads(prev => prev.map(u =>
-          u.preview === upload.preview ? { ...u, uploading: false, uploaded: true, url, public_id } : u
+          u.id === upload.id ? { ...u, uploading: false, uploaded: true, url, public_id } : u
         ))
-        return { status: 'fulfilled', value: url, public_id, preview: upload.preview }
+        return { url, public_id }
       } catch (error) {
         console.error('Error uploading image:', error)
         setImageUploads(prev => prev.map(u =>
-          u.preview === upload.preview ? { ...u, uploading: false, error: 'Upload failed' } : u
+          u.id === upload.id ? { 
+            ...u, 
+            uploading: false, 
+            error: error instanceof Error ? error.message : 'Upload failed' 
+          } : u
         ))
-        return { status: 'rejected', reason: error, preview: upload.preview }
+        throw error
       }
     })
 
-    const results = await Promise.all(uploadPromises)
-
-    const successfulUploads = results
-      .filter(result => result.status === 'fulfilled')
-      .map(result => ({ url: result.value, public_id: result.public_id }))
-
-    const hasFailures = results.some(result => result.status === 'rejected')
-    if (hasFailures) {
-      toast.error('Some images failed to upload. Please review and try again.')
-      setUploadingImages(false)
-      throw new Error('Image upload failed')
+    try {
+      const results = await Promise.all(uploadPromises)
+      return results
+    } catch (error) {
+      toast.error('Some images failed to upload. Please try again.')
+      throw error
     }
-
-    return successfulUploads as { url: string, public_id: string }[]
   }
 
-  const removeImageUpload = (index: number) => {
-    const upload = imageUploads[index]
-    URL.revokeObjectURL(upload.preview)
-    setImageUploads(prev => prev.filter((_, i) => i !== index))
+  const removeImageUpload = (id: string) => {
+    const upload = imageUploads.find(u => u.id === id)
+    if (upload) {
+      URL.revokeObjectURL(upload.preview)
+    }
+    setImageUploads(prev => prev.filter(u => u.id !== id))
   }
 
   const removeUploadedImage = (index: number) => {
@@ -134,22 +178,32 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
   }
 
   const addImageUrl = () => {
-    const url = prompt('Enter image URL:')
-    if (url && url.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, { url: url.trim() } as ArticleImage]
-      }))
+    const url = prompt('Enter image URL:')?.trim()
+    if (url) {
+      // Basic URL validation
+      try {
+        new URL(url)
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, { url } as ArticleImage]
+        }))
+        setErrors(prev => ({ ...prev, images: '' }))
+      } catch {
+        toast.error('Please enter a valid URL')
+      }
     }
   }
 
   const addSize = () => {
-    if (newSize.trim() && !formData.sizes.includes(newSize.trim())) {
+    const size = newSize.trim().toUpperCase()
+    if (size && !formData.sizes.includes(size)) {
       setFormData(prev => ({
         ...prev,
-        sizes: [...prev.sizes, newSize.trim()]
+        sizes: [...prev.sizes, size]
       }))
       setNewSize('')
+    } else if (formData.sizes.includes(size)) {
+      toast.error('Size already exists')
     }
   }
 
@@ -163,26 +217,28 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!validateForm()) {
+      toast.error('Please fix the errors before submitting')
+      return
+    }
+
+    setIsSubmitting(true)
+
     try {
-      const hasPendingUploads = imageUploads.some(upload => !upload.uploaded && !upload.uploading)
-
-      if (hasPendingUploads) {
-        setUploadingImages(true)
-      }
-
+      // Upload any pending images
       const newImageUrls = await uploadImages()
 
       const allImages = [
         ...formData.images,
-        ...newImageUrls.map(img => ({ url: img.url, public_id: img.public_id }))
+        ...newImageUrls
       ]
 
       const payload = {
-        name: formData.name,
-        description: formData.description,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
         price: parseFloat(formData.price),
         images: allImages,
-        category: formData.category,
+        category: formData.category.trim(),
         sizes: formData.sizes,
         inStock: formData.inStock,
         liveId: formData.liveId || null,
@@ -193,204 +249,321 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
         : await createArticle(payload)
 
       if (result.success) {
+        toast.success(
+          editingArticle 
+            ? 'Article updated successfully!' 
+            : 'Article created successfully!'
+        )
         onClose()
       } else {
-        console.error('Error saving article:', result.error)
-        toast.error('Failed to save article: ' + (result.error || 'Unknown error'))
+        toast.error(result.error || 'Failed to save article')
       }
     } catch (error) {
       console.error('Error in submission process:', error)
-      toast('An error occurred while saving the article')
+      toast.error('An error occurred while saving the article')
     } finally {
-      setUploadingImages(false)
+      setIsSubmitting(false)
     }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value
-    setFormData({
-      ...formData,
-      [e.target.name]: value
-    })
+    const { name, value, type } = e.target
+    const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: newValue
+    }))
+
+    // Clear specific field errors
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }))
+    }
   }
 
-  return (
-    <div className="fixed inset-0 backdrop-blur-lg bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-6">
-          {editingArticle ? 'Edit Article' : 'Add New Article'}
-        </h2>
+  const hasUnsavedUploads = imageUploads.some(upload => !upload.uploaded && !upload.error)
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-4">
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {editingArticle ? 'Edit Article' : 'Create New Article'}
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              disabled={isSubmitting}
+            >
+              <X size={24} />
+            </button>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Basic Information */}
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-2">Name *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Article Name *
+              </label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors ${
+                  errors.name ? 'border-red-300' : 'border-gray-300'
+                }`}
+                placeholder="Enter article name"
+                disabled={isSubmitting}
               />
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <AlertCircle size={16} className="mr-1" />
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Price (Rs.) *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Price (Rs.) *
+              </label>
               <input
                 type="number"
                 name="price"
                 value={formData.price}
                 onChange={handleChange}
-                required
                 min="0"
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors ${
+                  errors.price ? 'border-red-300' : 'border-gray-300'
+                }`}
+                placeholder="0.00"
+                disabled={isSubmitting}
               />
+              {errors.price && (
+                <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <AlertCircle size={16} className="mr-1" />
+                  {errors.price}
+                </p>
+              )}
             </div>
           </div>
 
+          {/* Description */}
           <div>
-            <label className="block text-sm font-medium mb-2">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors"
+              placeholder="Describe your article..."
+              disabled={isSubmitting}
             />
           </div>
 
+          {/* Images Section */}
           <div>
-            <label className="block text-sm font-medium mb-4">Images</label>
+            <label className="block text-sm font-medium text-gray-700 mb-4">
+              Images *
+            </label>
 
-            <div className="flex gap-2 mb-4">
-              <label className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer">
+            {/* Upload Actions */}
+            <div className="flex flex-wrap gap-3 mb-6">
+              <label className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors disabled:opacity-50">
                 <Upload size={16} className="mr-2" />
                 Upload Images
                 <input
+                  ref={fileInputRef}
                   type="file"
                   multiple
                   accept="image/*"
                   onChange={handleImageSelect}
                   className="hidden"
+                  disabled={isSubmitting}
                 />
               </label>
 
               <button
                 type="button"
                 onClick={addImageUrl}
-                className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                disabled={isSubmitting}
               >
                 <ImageIcon size={16} className="mr-2" />
                 Add URL
               </button>
 
-              {imageUploads.some(upload => !upload.uploaded && !upload.uploading) && (
+              {hasUnsavedUploads && (
                 <button
                   type="button"
                   onClick={uploadImages}
-                  disabled={uploadingImages}
-                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  disabled={isSubmitting}
                 >
-                  {uploadingImages ? 'Uploading...' : 'Upload All'}
+                  <Plus size={16} className="mr-2" />
+                  Upload All
                 </button>
               )}
             </div>
 
+            {/* Images Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Existing Images */}
               {formData.images.map((image, index) => (
-                <div key={`uploaded-${index}`} className="relative group">
+                <div key={`existing-${index}`} className="relative group">
                   <Image
                     src={image.url}
                     alt={`Product ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg border"
+                    className="w-full h-32 object-cover rounded-lg border border-gray-200"
                     width={150}
                     height={150}
                   />
                   <button
                     type="button"
                     onClick={() => removeUploadedImage(index)}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    disabled={isSubmitting}
                   >
                     <X size={12} />
                   </button>
                 </div>
               ))}
 
-              {imageUploads.map((upload, index) => (
-                <div key={`upload-${index}`} className="relative group">
+              {/* Upload Preview */}
+              {imageUploads.map((upload) => (
+                <div key={upload.id} className="relative group">
                   <Image
                     src={upload.preview}
-                    alt={`Upload ${index + 1}`}
-                    className={`w-full h-32 object-cover rounded-lg border ${upload.uploading ? 'opacity-50' : ''}`}
+                    alt="Upload preview"
+                    className={`w-full h-32 object-cover rounded-lg border ${
+                      upload.uploading ? 'opacity-50' : 'border-gray-200'
+                    }`}
                     width={150}
                     height={150}
                   />
 
+                  {/* Upload States */}
                   {upload.uploading && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
-                      <div className="text-white text-sm">Uploading...</div>
+                      <div className="flex items-center text-white text-sm">
+                        <Loader2 size={16} className="animate-spin mr-2" />
+                        Uploading...
+                      </div>
                     </div>
                   )}
 
                   {upload.uploaded && (
                     <div className="absolute inset-0 bg-green-500 bg-opacity-20 flex items-center justify-center rounded-lg">
-                      <div className="bg-green-500 text-white text-xs px-2 py-1 rounded">✓ Uploaded</div>
+                      <div className="bg-green-500 text-white text-xs px-2 py-1 rounded font-medium">
+                        ✓ Uploaded
+                      </div>
                     </div>
                   )}
 
                   {upload.error && (
                     <div className="absolute inset-0 bg-red-500 bg-opacity-20 flex items-center justify-center rounded-lg">
-                      <div className="bg-red-500 text-white text-xs px-2 py-1 rounded">Failed</div>
+                      <div className="bg-red-500 text-white text-xs px-2 py-1 rounded font-medium">
+                        Failed
+                      </div>
                     </div>
                   )}
 
-                  {!upload.uploaded && (
-                    <button
-                      type="button"
-                      onClick={() => removeImageUpload(index)}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={12} />
-                    </button>
-                  )}
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    onClick={() => removeImageUpload(upload.id)}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    disabled={upload.uploading || isSubmitting}
+                  >
+                    <X size={12} />
+                  </button>
                 </div>
               ))}
             </div>
+
+            {errors.images && (
+              <p className="mt-2 text-sm text-red-600 flex items-center">
+                <AlertCircle size={16} className="mr-1" />
+                {errors.images}
+              </p>
+            )}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          {/* Category and Stock */}
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-2">Category</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
               <input
                 type="text"
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
                 placeholder="e.g., Casual, Formal, Party"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors"
+                disabled={isSubmitting}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Featured in Live
+              </label>
+              <select
+                name="liveId"
+                value={formData.liveId}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors"
+                disabled={isSubmitting}
+              >
+                <option value="">Not featured in any live</option>
+                {lives.map((live) => (
+                  <option key={live.id} value={live.id}>
+                    {live.title} - {new Date(live.date).toLocaleDateString()}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
+          {/* Sizes */}
           <div>
-            <label className="block text-sm font-medium mb-2">Sizes</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Available Sizes
+            </label>
             <div className="flex gap-2 mb-3">
               <input
                 type="text"
                 value={newSize}
-                onChange={(e) => setNewSize(e.target.value)}
+                onChange={(e) => setNewSize(e.target.value.toUpperCase())}
                 placeholder="e.g., S, M, L, XL"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSize())}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addSize()
+                  }
+                }}
+                disabled={isSubmitting}
               />
               <button
                 type="button"
                 onClick={addSize}
-                className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700"
+                className="px-4 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+                disabled={isSubmitting}
               >
-                Add Size
+                Add
               </button>
             </div>
 
@@ -399,13 +572,14 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
                 {formData.sizes.map((size, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium"
                   >
                     {size}
                     <button
                       type="button"
                       onClick={() => removeSize(index)}
-                      className="ml-1 text-gray-500 hover:text-red-500"
+                      className="ml-1 text-gray-500 hover:text-red-500 transition-colors"
+                      disabled={isSubmitting}
                     >
                       <X size={14} />
                     </button>
@@ -415,23 +589,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Featured in Live</label>
-            <select
-              name="liveId"
-              value={formData.liveId}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
-            >
-              <option value="">Not featured in any live</option>
-              {lives.map((live) => (
-                <option key={live.id} value={live.id}>
-                  {live.title} - {new Date(live.date).toLocaleDateString()}
-                </option>
-              ))}
-            </select>
-          </div>
-
+          {/* Stock Status */}
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -439,28 +597,52 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
               checked={formData.inStock}
               onChange={handleChange}
               className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+              disabled={isSubmitting}
             />
-            <label className="ml-2 text-sm font-medium">In Stock</label>
+            <label className="ml-3 text-sm font-medium text-gray-700">
+              Item is in stock
+            </label>
           </div>
 
-          <div className="flex gap-4 pt-4">
+          {/* Submit Actions */}
+          <div className="flex gap-4 pt-6 border-t border-gray-200">
             <button
               type="submit"
-              disabled={uploadingImages}
-              className="flex-1 bg-pink-600 text-white py-2 px-4 rounded-lg hover:bg-pink-700 disabled:opacity-50"
+              disabled={isSubmitting || hasUnsavedUploads}
+              className="flex-1 bg-pink-600 text-white py-3 px-6 rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
-              {uploadingImages ? 'Uploading Images...' : editingArticle ? 'Update' : 'Create'}
+              {isSubmitting ? (
+                <div className="flex items-center justify-center">
+                  <Loader2 size={16} className="animate-spin mr-2" />
+                  {editingArticle ? 'Updating...' : 'Creating...'}
+                </div>
+              ) : (
+                editingArticle ? 'Update Article' : 'Create Article'
+              )}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-gray-300 py-2 px-4 rounded-lg hover:bg-gray-50"
+              className="flex-1 border border-gray-300 py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              disabled={isSubmitting}
             >
               Cancel
             </button>
           </div>
+
+          {hasUnsavedUploads && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <AlertCircle className="text-yellow-600 mt-0.5 mr-2" size={16} />
+                <div className="text-sm text-yellow-800">
+                  <p className="font-medium">Unsaved Images</p>
+                  <p>You have uploaded images that haven't been saved yet. Please upload them before submitting the form.</p>
+                </div>
+              </div>
+            </div>
+          )}
         </form>
       </div>
     </div>
   )
-} 
+}

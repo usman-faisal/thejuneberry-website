@@ -24,12 +24,25 @@ interface ArticleFormData {
 
 export async function createArticle(data: ArticleFormData) {
   try {
+    // Validate required fields
+    if (!data.name?.trim()) {
+      return { success: false, error: 'Article name is required' }
+    }
+
+    if (!data.price || data.price <= 0) {
+      return { success: false, error: 'Valid price is required' }
+    }
+
+    if (!data.images || data.images.length === 0) {
+      return { success: false, error: 'At least one image is required' }
+    }
+
     const article = await prisma.article.create({
       data: {
-        name: data.name,
-        description: data.description,
+        name: data.name.trim(),
+        description: data.description?.trim() || null,
         price: data.price,
-        category: data.category,
+        category: data.category?.trim() || null,
         inStock: data.inStock,
         liveId: data.liveId,
         images: {
@@ -40,7 +53,7 @@ export async function createArticle(data: ArticleFormData) {
         },
         sizes: {
           create: data.sizes.map(size => ({
-            size
+            size: size.trim()
           }))
         }
       },
@@ -51,73 +64,105 @@ export async function createArticle(data: ArticleFormData) {
     })
 
     revalidatePath('/admin/articles')
-    revalidatePath(`/articles`)
+    revalidatePath('/articles')
     return { success: true, article }
   } catch (error) {
     console.error('Error creating article:', error)
-    return { success: false, error: 'Failed to create article' }
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to create article' 
+    }
   }
 }
 
-async function deleteImages(images: ArticleImage[]) {
-  try {
-    await Promise.all(
-      images.map(async (image) => {
-        if (image.public_id) {
-          await cloudinary.uploader.destroy(image.public_id);
-        }
-        await prisma.image.delete({
-          where: { id: image.id }
-        });
-      })
-    );
-  } catch (error) {
-    console.error('Error deleting images:', error);
-  }
+async function deleteCloudinaryImages(images: Pick<ArticleImage, 'public_id'>[]) {
+  const deletePromises = images
+    .filter(image => image.public_id)
+    .map(async (image) => {
+      try {
+        await cloudinary.uploader.destroy(image.public_id!)
+      } catch (error) {
+        console.warn(`Failed to delete image ${image.public_id} from Cloudinary:`, error)
+        // Don't throw here, continue with other deletions
+      }
+    })
+
+  await Promise.all(deletePromises)
 }
 
 export async function updateArticle(id: string, data: ArticleFormData) {
   try {
-    const images = await prisma.image.findMany({
-      where: { articleId: id }
-    })
-    await deleteImages(images)
-    await prisma.articleSize.deleteMany({
-      where: { articleId: id }
+    // Validate required fields
+    if (!data.name?.trim()) {
+      return { success: false, error: 'Article name is required' }
+    }
+
+    if (!data.price || data.price <= 0) {
+      return { success: false, error: 'Valid price is required' }
+    }
+
+    if (!data.images || data.images.length === 0) {
+      return { success: false, error: 'At least one image is required' }
+    }
+
+    // Get existing images for cleanup
+    const existingImages = await prisma.image.findMany({
+      where: { articleId: id },
+      select: { id: true, public_id: true }
     })
 
-    const article = await prisma.article.update({
-      where: { id },
-      data: {
-        name: data.name,
-        description: data.description,
-        price: data.price,
-        category: data.category,
-        inStock: data.inStock,
-        liveId: data.liveId,
-        images: {
-          create: data.images.map(img => ({
-            url: img.url,
-            public_id: img.public_id || ''
-          }))
+    // Start a transaction to ensure data consistency
+    const article = await prisma.$transaction(async (tx) => {
+      // Delete existing images from Cloudinary (don't wait for this)
+      deleteCloudinaryImages(existingImages).catch(console.error)
+
+      // Delete existing images and sizes from database
+      await Promise.all([
+        tx.image.deleteMany({
+          where: { articleId: id }
+        }),
+        tx.articleSize.deleteMany({
+          where: { articleId: id }
+        })
+      ])
+
+      // Update article with new data
+      return tx.article.update({
+        where: { id },
+        data: {
+          name: data.name.trim(),
+          description: data.description?.trim() || null,
+          price: data.price,
+          category: data.category?.trim() || null,
+          inStock: data.inStock,
+          liveId: data.liveId,
+          images: {
+            create: data.images.map(img => ({
+              url: img.url,
+              public_id: img.public_id || ''
+            }))
+          },
+          sizes: {
+            create: data.sizes.map(size => ({
+              size: size.trim()
+            }))
+          }
         },
-        sizes: {
-          create: data.sizes.map(size => ({
-            size
-          }))
+        include: {
+          images: true,
+          sizes: true,
         }
-      },
-      include: {
-        images: true,
-        sizes: true,
-      }
+      })
     })
 
     revalidatePath('/admin/articles')
-    revalidatePath(`/articles`)
+    revalidatePath('/articles')
     return { success: true, article }
   } catch (error) {
     console.error('Error updating article:', error)
-    return { success: false, error: 'Failed to update article' }
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to update article' 
+    }
   }
-} 
+}

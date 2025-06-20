@@ -15,16 +15,16 @@ export default async function AdminArticlesPage() {
     }
   })
 
-  const lives = await prisma.live.findMany()
-
-  async function handleEdit(article: any) {
-    'use server'
-    revalidatePath('/admin/articles')
-  }
+  const lives = await prisma.live.findMany({
+    orderBy: {
+      date: 'desc'
+    }
+  })
 
   async function handleDelete(id: string) {
     'use server'
     try {
+      // Get all images for this article
       const imagesData = await prisma.image.findMany({
         where: { articleId: id },
         select: {
@@ -32,10 +32,15 @@ export default async function AdminArticlesPage() {
         }
       })
       
+      // Delete from Cloudinary and database in parallel
       await Promise.all([
+        // Delete images from Cloudinary
         ...imagesData
           .filter(image => image.public_id)
-          .map(image => cloudinary.uploader.destroy(image.public_id)),
+          .map(image => cloudinary.uploader.destroy(image.public_id).catch(err => 
+            console.warn(`Failed to delete image ${image.public_id} from Cloudinary:`, err)
+          )),
+        // Delete related data from database
         prisma.image.deleteMany({
           where: { articleId: id }
         }),
@@ -44,29 +49,33 @@ export default async function AdminArticlesPage() {
         })
       ])
       
+      // Finally delete the article
       await prisma.article.delete({
         where: { id }
       })
       
       revalidatePath('/admin/articles')
+      return { success: true }
     } catch (error) {
       console.error('Error deleting article:', error)
-      throw new Error('Failed to delete article')
+      return { success: false, error: 'Failed to delete article' }
     }
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Articles Management</h1>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Articles Management</h1>
+          <p className="text-gray-600 mt-1">Manage your product catalog</p>
+        </div>
         <ArticleActions lives={lives} />
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm">
+      <div className="bg-white rounded-lg shadow-sm border">
         <ArticlesTable 
           lives={lives}
           articles={articles} 
-          onEdit={handleEdit}
           onDelete={handleDelete}
         />
       </div>

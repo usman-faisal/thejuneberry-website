@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import cloudinary from '@/lib/cloudinary' // Import cloudinary
 import { revalidatePath } from 'next/cache'
 
 interface LiveFormData {
@@ -9,6 +10,7 @@ interface LiveFormData {
   date: string
   videoUrl: string
   thumbnail: string
+  thumbnail_public_id: string | null // Add this
 }
 
 export async function getLives() {
@@ -36,7 +38,8 @@ export async function createLive(data: LiveFormData) {
         description: data.description,
         date: new Date(data.date),
         videoUrl: data.videoUrl,
-        thumbnail: data.thumbnail
+        thumbnail: data.thumbnail,
+        thumbnail_public_id: data.thumbnail_public_id, // Save public_id
       },
       include: {
         articles: true
@@ -54,6 +57,16 @@ export async function createLive(data: LiveFormData) {
 
 export async function updateLive(id: string, data: LiveFormData) {
   try {
+    // Get the current live to check for the old thumbnail
+    const currentLive = await prisma.live.findUnique({ where: { id } });
+
+    // If the thumbnail has changed and there was an old one, delete it from Cloudinary
+    if (currentLive?.thumbnail_public_id && currentLive.thumbnail_public_id !== data.thumbnail_public_id) {
+      await cloudinary.uploader.destroy(currentLive.thumbnail_public_id).catch(err => 
+        console.warn(`Failed to delete old thumbnail ${currentLive.thumbnail_public_id}:`, err)
+      );
+    }
+
     const live = await prisma.live.update({
       where: { id },
       data: {
@@ -61,7 +74,8 @@ export async function updateLive(id: string, data: LiveFormData) {
         description: data.description,
         date: new Date(data.date),
         videoUrl: data.videoUrl,
-        thumbnail: data.thumbnail
+        thumbnail: data.thumbnail,
+        thumbnail_public_id: data.thumbnail_public_id, // Update public_id
       },
       include: {
         articles: true
@@ -79,6 +93,14 @@ export async function updateLive(id: string, data: LiveFormData) {
 
 export async function deleteLive(id: string) {
   try {
+    // Also delete thumbnail from Cloudinary on delete
+    const liveToDelete = await prisma.live.findUnique({ where: { id } });
+    if (liveToDelete?.thumbnail_public_id) {
+      await cloudinary.uploader.destroy(liveToDelete.thumbnail_public_id).catch(err => 
+        console.warn(`Failed to delete thumbnail ${liveToDelete.thumbnail_public_id}:`, err)
+      );
+    }
+
     await prisma.live.delete({
       where: { id }
     })
@@ -90,4 +112,4 @@ export async function deleteLive(id: string) {
     console.error('Error deleting live:', error)
     return { success: false, error: 'Failed to delete live' }
   }
-} 
+}

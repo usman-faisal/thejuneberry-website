@@ -17,7 +17,6 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   const handleCheckout = () => {
     if (items.length === 0) return;
     
-    localStorage.setItem('checkoutCartData', JSON.stringify(items));
     onClose();
     window.location.href = '/checkout';
   };

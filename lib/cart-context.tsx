@@ -133,7 +133,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/`;
     };
 
-    setCookie('cart', JSON.stringify(state.items));
+    setCookie('cart', JSON.stringify(state.items), 1 / 24);
   }, [state.items]);
 
   return (

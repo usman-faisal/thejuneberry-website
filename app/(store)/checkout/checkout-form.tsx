@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { createOrder, validateOrderItem } from '@/app/actions/orders';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useCart } from '@/lib/cart-context';
 
 interface CartItem {
   id: string;
@@ -25,6 +26,7 @@ interface CheckoutFormProps {
 
 export function CheckoutForm({ cartItems, totalAmount }: CheckoutFormProps) {
   const router = useRouter();
+  const {dispatch} = useCart()
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',
@@ -81,6 +83,7 @@ export function CheckoutForm({ cartItems, totalAmount }: CheckoutFormProps) {
 
       if (result.success) {
         toast.success('Order placed successfully!');
+        dispatch({type: 'CLEAR_CART'})
         router.push('/checkout/success');
       } else {
         toast.error(result.error || 'Error placing order. Please try again.');

@@ -161,7 +161,7 @@ export default async function LivesPage() {
                 Follow us on Facebook to get notified when we go live with new collections
               </p>
               <a 
-                href="https://facebook.com/thejuneberry" 
+                href="https://facebook.com/thejuneberry1" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-6 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors font-medium"

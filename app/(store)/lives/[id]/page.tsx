@@ -3,6 +3,7 @@ import { Calendar, Play, ShoppingBag, ArrowLeft, Clock, Users } from 'lucide-rea
 import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import ArticleList from '../../articles/article-list'
 
 function getEmbedUrl(url: string): string {
   if (url.includes('youtube.com/watch?v=')) {
@@ -154,7 +155,7 @@ export default async function LiveDetailPage({ params }: PageProps) {
         {/* Featured Articles Section */}
         <div>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
               Featured Items ({live.articles?.length || 0})
             </h2>
             <Link 
@@ -166,83 +167,7 @@ export default async function LiveDetailPage({ params }: PageProps) {
           </div>
 
           {live.articles && live.articles.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {live.articles.map((article) => (
-                <div 
-                  key={article.id} 
-                  className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-pink-200 transition-all duration-300"
-                >
-                  {/* Product Image */}
-                  <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-                    {article.images.length > 0 ? (
-                      <Image
-                        src={article.images[0].url}
-                        alt={article.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ShoppingBag className="text-gray-300" size={40} />
-                      </div>
-                    )}
-                    
-                    {/* Featured Badge */}
-                    <div className="absolute top-3 left-3">
-                      <span className="px-2 py-1 bg-pink-500 text-white text-xs font-medium rounded-full">
-                        Featured
-                      </span>
-                    </div>
-
-                    {/* Category Badge */}
-                    {article.category && (
-                      <div className="absolute top-3 right-3">
-                        <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-xs font-medium text-gray-700 rounded-full">
-                          {article.category}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 group-hover:text-pink-600 transition-colors">
-                      {article.name}
-                    </h3>
-                    
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-lg font-semibold text-gray-900">
-                        Rs. {article.price.toLocaleString()}
-                      </p>
-                      
-                      {/* Sizes */}
-                      {article.sizes && article.sizes.length > 0 && (
-                        <div className="flex gap-1">
-                          {article.sizes.slice(0, 3).map(size => (
-                            <span key={size.id} className="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">
-                              {size.size}
-                            </span>
-                          ))}
-                          {article.sizes.length > 3 && (
-                            <span className="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">
-                              +{article.sizes.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* View Details Button */}
-                    <Link 
-                      href={`/articles/${article.id}`}
-                      className="block w-full text-center bg-gray-900 text-white py-2.5 px-4 rounded-lg hover:bg-pink-600 transition-colors text-sm font-medium"
-                    >
-                      View Details
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
+                <ArticleList articles={live.articles} />
           ) : (
             <div className="text-center py-16">
               <ShoppingBag className="mx-auto text-gray-300 mb-4" size={64} />
@@ -269,7 +194,7 @@ export default async function LiveDetailPage({ params }: PageProps) {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a 
-                href="https://facebook.com/thejuneberry" 
+                href="https://facebook.com/thejuneberry1" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-6 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors font-medium"

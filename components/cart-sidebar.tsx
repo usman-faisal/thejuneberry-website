@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCart } from '@/lib/use-cart';
-import { X, ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
+import { X, ShoppingCart, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
 
 interface CartSidebarProps {
@@ -18,7 +17,6 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   const handleCheckout = () => {
     if (items.length === 0) return;
     
-    // Store cart data for checkout
     localStorage.setItem('checkoutCartData', JSON.stringify(items));
     onClose();
     window.location.href = '/checkout';
@@ -27,128 +25,186 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={onClose}>
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      
+      {/* Sidebar */}
       <div 
-        className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out"
+        className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl transform transition-transform duration-300 ease-out z-50"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b">
-            <h2 className="text-xl font-semibold flex items-center">
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Cart ({totalItems})
-            </h2>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-5 w-5" />
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-pink-50 rounded-lg">
+                <ShoppingCart className="text-pink-600" size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Shopping Cart</h2>
+                <p className="text-sm text-gray-600">{totalItems} {totalItems === 1 ? 'item' : 'items'}</p>
+              </div>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X size={20} className="text-gray-500" />
             </Button>
           </div>
 
           {/* Cart Items */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto bg-gray-50">
             {items.length === 0 ? (
-              <div className="text-center py-12">
-                <ShoppingCart className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+              <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                  <ShoppingBag className="text-gray-400" size={32} />
+                </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Your cart is empty</h3>
-                <p className="text-gray-600 mb-4">Add some items to get started</p>
-                <Button onClick={onClose} className="bg-pink-600 hover:bg-pink-700">
+                <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+                  Discover our beautiful collection of dresses and add your favorites to get started.
+                </p>
+                <Button 
+                  onClick={onClose} 
+                  className="bg-gray-900 hover:bg-pink-600 text-white px-6 py-2.5 rounded-lg transition-colors font-medium"
+                >
                   Continue Shopping
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="p-4 space-y-4">
                 {items.map((item) => {
                   const itemKey = `${item.id}-${item.selectedSize}`;
                   return (
-                    <Card key={itemKey} className="p-4">
-                      <div className="flex items-start space-x-4">
-                        <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                    <div key={itemKey} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                      <div className="flex gap-4">
+                        {/* Product Image */}
+                        <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                           <Image
                             src={item.image}
                             alt={item.name}
+                            width={64}
+                            height={64}
                             className="w-full h-full object-cover"
-                            width={150}
-                            height={150}
                           />
                         </div>
                         
+                        {/* Product Details */}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">{item.name}</h4>
-                          <p className="text-sm text-gray-600">
-                            Size: {item.selectedSize}
-                          </p>
-                          <p className="text-lg font-semibold text-pink-600">
+                          <h4 className="font-medium text-gray-900 text-sm line-clamp-2 mb-1">
+                            {item.name}
+                          </h4>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs text-gray-600">Size:</span>
+                            <span className="px-2 py-0.5 bg-gray-100 text-xs text-gray-700 rounded">
+                              {item.selectedSize}
+                            </span>
+                          </div>
+                          <p className="text-sm font-semibold text-gray-900">
                             Rs. {item.price.toLocaleString()}
                           </p>
-                          
-                          {/* Quantity Controls */}
-                          <div className="flex items-center justify-between mt-3">
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity - 1)}
-                                disabled={item.quantity <= 1}
-                              >
-                                <Minus className="h-3 w-3" />
-                              </Button>
-                              <span className="w-8 text-center">{item.quantity}</span>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity + 1)}
-                              >
-                                <Plus className="h-3 w-3" />
-                              </Button>
-                            </div>
-                            
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeFromCart(item.id, item.selectedSize)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                        </div>
+
+                        {/* Remove Button */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFromCart(item.id, item.selectedSize)}
+                          className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors flex-shrink-0"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+
+                      {/* Quantity Controls */}
+                      <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                        <div className="flex items-center bg-gray-50 rounded-lg">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                            className="p-2 hover:bg-gray-200 rounded-l-lg transition-colors"
+                          >
+                            <Minus size={14} />
+                          </Button>
+                          <span className="w-10 text-center text-sm font-medium">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity + 1)}
+                            className="p-2 hover:bg-gray-200 rounded-r-lg transition-colors"
+                          >
+                            <Plus size={14} />
+                          </Button>
+                        </div>
+                        
+                        <div className="text-sm font-semibold text-gray-900">
+                          Rs. {(item.price * item.quantity).toLocaleString()}
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   );
                 })}
               </div>
             )}
           </div>
 
-          {/* Footer */}
+          {/* Footer with Total and Actions */}
           {items.length > 0 && (
-            <div className="border-t p-6 space-y-4">
-              <div className="flex justify-between items-center text-lg font-semibold">
-                <span>Total:</span>
-                <span className="text-pink-600">Rs. {totalPrice.toLocaleString()}</span>
+            <div className="border-t border-gray-200 bg-white p-6 space-y-4">
+              {/* Total */}
+              <div className="flex justify-between items-center py-2">
+                <span className="text-lg font-semibold text-gray-900">Total</span>
+                <span className="text-xl font-bold text-gray-900">
+                  Rs. {totalPrice.toLocaleString()}
+                </span>
               </div>
               
-              <div className="space-y-2">
+              {/* Action Buttons */}
+              <div className="space-y-3">
                 <Button 
                   onClick={handleCheckout}
-                  className="w-full bg-pink-600 hover:bg-pink-700"
+                  className="w-full bg-gray-900 hover:bg-pink-600 text-white py-3 rounded-lg font-semibold transition-colors"
                   size="lg"
                 >
-                  Checkout
+                  Proceed to Checkout
                 </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={clearCart}
-                  className="w-full"
-                >
-                  Clear Cart
-                </Button>
+                
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={onClose}
+                    className="flex-1 border-2 hover:bg-gray-50 py-2.5 rounded-lg transition-colors"
+                  >
+                    Continue Shopping
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={clearCart}
+                    className="px-4 border-2 hover:bg-red-50 hover:border-red-200 hover:text-red-600 py-2.5 rounded-lg transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Delivery Note */}
+              <div className="text-center pt-3 border-t border-gray-100">
+                <p className="text-xs text-gray-600">
+                  Free delivery on orders above Rs. 5,000
+                </p>
               </div>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

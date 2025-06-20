@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Plus, Upload, X, ImageIcon, Loader2, AlertCircle } from 'lucide-react'
+import { Plus, Upload, X, ImageIcon, Loader2, AlertCircle, Package, DollarSign, Tag } from 'lucide-react'
 import Image from 'next/image'
 import { Live, Prisma } from '@prisma/client'
 import { createArticle, updateArticle } from '@/app/actions/articles'
@@ -287,100 +287,115 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 md:px-6 py-4 rounded-t-xl">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {editingArticle ? 'Edit Article' : 'Create New Article'}
-            </h2>
+            <div className="flex items-center">
+              <div className="p-2 bg-pink-100 rounded-lg mr-3">
+                <Package size={20} className="text-pink-600" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-lg md:text-2xl font-bold text-gray-900 truncate">
+                  {editingArticle ? 'Edit Article' : 'Create New Article'}
+                </h2>
+                <p className="text-sm text-gray-500 hidden md:block">
+                  {editingArticle ? 'Update product information' : 'Add a new product to your catalog'}
+                </p>
+              </div>
+            </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
               disabled={isSubmitting}
             >
-              <X size={24} />
+              <X size={20} />
             </button>
           </div>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-6">
           {/* Basic Information */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Article Name *
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors ${
-                  errors.name ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="Enter article name"
-                disabled={isSubmitting}
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle size={16} className="mr-1" />
-                  {errors.name}
-                </p>
-              )}
+          <div className="grid gap-6">
+            <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+              <div>
+                <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                  <Package size={16} className="mr-2 text-gray-400" />
+                  Article Name *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors ${
+                    errors.name ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter article name"
+                  disabled={isSubmitting}
+                />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle size={16} className="mr-1" />
+                    {errors.name}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                  <DollarSign size={16} className="mr-2 text-gray-400" />
+                  Price (Rs.) *
+                </label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors ${
+                    errors.price ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="0.00"
+                  disabled={isSubmitting}
+                />
+                {errors.price && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle size={16} className="mr-1" />
+                    {errors.price}
+                  </p>
+                )}
+              </div>
             </div>
 
+            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price (Rs.) *
+                Description
               </label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
+              <textarea
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
-                min="0"
-                step="0.01"
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors ${
-                  errors.price ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="0.00"
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors resize-none"
+                placeholder="Describe your article..."
                 disabled={isSubmitting}
               />
-              {errors.price && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle size={16} className="mr-1" />
-                  {errors.price}
-                </p>
-              )}
             </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors"
-              placeholder="Describe your article..."
-              disabled={isSubmitting}
-            />
           </div>
 
           {/* Images Section */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-4">
+            <label className="flex items-center text-sm font-medium text-gray-700 mb-4">
+              <ImageIcon size={16} className="mr-2 text-gray-400" />
               Images *
             </label>
 
             {/* Upload Actions */}
-            <div className="flex flex-wrap gap-3 mb-6">
-              <label className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors disabled:opacity-50">
-                <Upload size={16} className="mr-2" />
+            <div className="flex flex-wrap gap-2 md:gap-3 mb-4 md:mb-6">
+              <label className="flex items-center px-3 py-2 md:px-4 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors disabled:opacity-50 text-sm">
+                <Upload size={14} className="mr-2" />
                 Upload Images
                 <input
                   ref={fileInputRef}
@@ -396,10 +411,10 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
               <button
                 type="button"
                 onClick={addImageUrl}
-                className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                className="flex items-center px-3 py-2 md:px-4 md:py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
                 disabled={isSubmitting}
               >
-                <ImageIcon size={16} className="mr-2" />
+                <ImageIcon size={14} className="mr-2" />
                 Add URL
               </button>
 
@@ -407,34 +422,34 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
                 <button
                   type="button"
                   onClick={uploadImages}
-                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="flex items-center px-3 py-2 md:px-4 md:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
                   disabled={isSubmitting}
                 >
-                  <Plus size={16} className="mr-2" />
+                  <Plus size={14} className="mr-2" />
                   Upload All
                 </button>
               )}
             </div>
 
             {/* Images Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               {/* Existing Images */}
               {formData.images.map((image, index) => (
                 <div key={`existing-${index}`} className="relative group">
                   <Image
                     src={image.url}
                     alt={`Product ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                    className="w-full h-24 md:h-32 object-cover rounded-lg border border-gray-200"
                     width={150}
                     height={150}
                   />
                   <button
                     type="button"
                     onClick={() => removeUploadedImage(index)}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    className="absolute top-1 right-1 md:top-2 md:right-2 bg-red-500 text-white rounded-full p-1 md:p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                     disabled={isSubmitting}
                   >
-                    <X size={12} />
+                    <X size={10} />
                   </button>
                 </div>
               ))}
@@ -445,7 +460,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
                   <Image
                     src={upload.preview}
                     alt="Upload preview"
-                    className={`w-full h-32 object-cover rounded-lg border ${
+                    className={`w-full h-24 md:h-32 object-cover rounded-lg border ${
                       upload.uploading ? 'opacity-50' : 'border-gray-200'
                     }`}
                     width={150}
@@ -455,8 +470,8 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
                   {/* Upload States */}
                   {upload.uploading && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
-                      <div className="flex items-center text-white text-sm">
-                        <Loader2 size={16} className="animate-spin mr-2" />
+                      <div className="flex items-center text-white text-xs">
+                        <Loader2 size={12} className="animate-spin mr-1" />
                         Uploading...
                       </div>
                     </div>
@@ -482,10 +497,10 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
                   <button
                     type="button"
                     onClick={() => removeImageUpload(upload.id)}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    className="absolute top-1 right-1 md:top-2 md:right-2 bg-red-500 text-white rounded-full p-1 md:p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                     disabled={upload.uploading || isSubmitting}
                   >
-                    <X size={12} />
+                    <X size={10} />
                   </button>
                 </div>
               ))}
@@ -499,10 +514,11 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
             )}
           </div>
 
-          {/* Category and Stock */}
-          <div className="grid md:grid-cols-2 gap-6">
+          {/* Category and Live */}
+          <div className="grid md:grid-cols-2 gap-4 md:gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <Tag size={16} className="mr-2 text-gray-400" />
                 Category
               </label>
               <input
@@ -605,7 +621,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
           </div>
 
           {/* Submit Actions */}
-          <div className="flex gap-4 pt-6 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
             <button
               type="submit"
               disabled={isSubmitting || hasUnsavedUploads}

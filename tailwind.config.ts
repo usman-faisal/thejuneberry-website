@@ -9,6 +9,7 @@ module.exports = {
   ],
   prefix: "",
   theme: {
+
     container: {
       center: true,
       padding: "2rem",
@@ -16,7 +17,11 @@ module.exports = {
         "2xl": "1400px",
       },
     },
+
     extend: {
+      screens: {
+          'xs': '480px', // custom breakpoint smaller than sm
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

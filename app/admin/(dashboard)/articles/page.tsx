@@ -3,6 +3,7 @@ import { ArticlesTable } from './articles-table'
 import { ArticleActions } from './article-actions'
 import { revalidatePath } from 'next/cache'
 import cloudinary from '@/lib/cloudinary'
+import { ShoppingBag, Package, DollarSign, TrendingUp } from 'lucide-react'
 
 export default async function AdminArticlesPage() {
   const articles = await prisma.article.findMany({
@@ -20,6 +21,12 @@ export default async function AdminArticlesPage() {
       date: 'desc'
     }
   })
+
+  // Calculate stats
+  const totalValue = articles.reduce((sum, article) => sum + article.price, 0)
+  const inStockCount = articles.filter(article => article.inStock).length
+  const outOfStockCount = articles.length - inStockCount
+  const featuredCount = articles.filter(article => article.liveId).length
 
   async function handleDelete(id: string) {
     'use server'
@@ -64,21 +71,58 @@ export default async function AdminArticlesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Articles Management</h1>
-          <p className="text-gray-600 mt-1">Manage your product catalog</p>
+      {/* Header Section */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Articles Management</h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">
+              Manage your product catalog and inventory
+            </p>
+          </div>
+          <ArticleActions lives={lives} />
         </div>
-        <ArticleActions lives={lives} />
+
+        {/* Stats Grid - Mobile First */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+          <div className="bg-white p-3 md:p-4 rounded-xl border text-center">
+            <div className="text-lg md:text-xl font-bold text-gray-900">{articles.length}</div>
+            <div className="text-xs text-gray-500">Total Items</div>
+          </div>
+          <div className="bg-white p-3 md:p-4 rounded-xl border text-center">
+            <div className="text-lg md:text-xl font-bold text-green-600">{inStockCount}</div>
+            <div className="text-xs text-gray-500">In Stock</div>
+          </div>
+          <div className="bg-white p-3 md:p-4 rounded-xl border text-center">
+            <div className="text-lg md:text-xl font-bold text-red-600">{outOfStockCount}</div>
+            <div className="text-xs text-gray-500">Out of Stock</div>
+          </div>
+          <div className="bg-white p-3 md:p-4 rounded-xl border text-center">
+            <div className="text-lg md:text-xl font-bold text-purple-600">{featuredCount}</div>
+            <div className="text-xs text-gray-500">Featured</div>
+          </div>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border">
-        <ArticlesTable 
-          lives={lives}
-          articles={articles} 
-          onDelete={handleDelete}
-        />
+      {/* Total Value Card */}
+      <div className="bg-gradient-to-r from-green-500 to-teal-600 rounded-xl p-4 md:p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-green-100 text-sm">Total Catalog Value</p>
+            <p className="text-2xl md:text-3xl font-bold">Rs. {totalValue.toLocaleString()}</p>
+            <p className="text-green-100 text-sm mt-1">{articles.length} articles in catalog</p>
+          </div>
+          <div className="p-3 bg-white/20 rounded-lg">
+            <DollarSign size={24} />
+          </div>
+        </div>
       </div>
+
+      <ArticlesTable 
+        lives={lives}
+        articles={articles} 
+        onDelete={handleDelete}
+      />
     </div>
   )
 }

@@ -2,23 +2,19 @@
 
 import { Edit, Trash2, ShoppingBag, AlertCircle, Search, Filter, X, Eye, Tag, Package } from 'lucide-react'
 import Image from 'next/image'
-import { Live, Prisma } from '@prisma/client'
+import { Article, Live, Prisma } from '@prisma/client'
 import { useState, useEffect } from 'react'
 import { ArticleForm } from './article-form'
 import { toast } from 'sonner'
 
 interface ArticlesTableProps {
-  articles: Prisma.ArticleGetPayload<{
-    include: {  sizes: true };
-  }>[]
+  articles: Article[]
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>
   lives: Live[]
 }
 
 export function ArticlesTable({ articles, onDelete, lives }: ArticlesTableProps) {
-  const [editingArticle, setEditingArticle] = useState<Prisma.ArticleGetPayload<{
-    include: {  sizes: true };
-  }> | null>(null)
+  const [editingArticle, setEditingArticle] = useState<Article | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [filteredArticles, setFilteredArticles] = useState(articles)
   const [searchTerm, setSearchTerm] = useState('')
@@ -187,7 +183,7 @@ export function ArticlesTable({ articles, onDelete, lives }: ArticlesTableProps)
             {filteredArticles.map((article) => {
               const images = article.images || []
               const primaryImage = images[0]
-              const sizes = article.sizes.map(sizeObj => sizeObj.size).join(', ') || 'No sizes'
+              const sizes = article.sizes.join(', ') || 'No sizes'
               const isDeleting = deletingId === article.id
               const associatedLive = lives.find(live => live.id === article.liveId)
 
@@ -328,7 +324,7 @@ export function ArticlesTable({ articles, onDelete, lives }: ArticlesTableProps)
                   {filteredArticles.map((article) => {
                     const images = article.images || []
                     const primaryImage = images[0]
-                    const sizes = article.sizes.map(sizeObj => sizeObj.size).join(', ') || 'No sizes'
+                    const sizes = article.sizes.join(', ') || 'No sizes'
                     const isDeleting = deletingId === article.id
                     const associatedLive = lives.find(live => live.id === article.liveId)
 

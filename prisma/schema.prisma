@@ -31,7 +31,7 @@ model Article {
   images      String[]
   videos      String[]
   category    String?
-  sizes       ArticleSize[]
+  sizes       Size[]      // Changed to Size enum array
   inStock     Boolean     @default(true)
   videoUrl    String?     // Added this field for Facebook embed URLs
   liveId      String?
@@ -41,12 +41,7 @@ model Article {
   updatedAt   DateTime    @updatedAt
 }
 
-model ArticleSize {
-  id        String  @id @default(cuid())
-  articleId String
-  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  size      String
-}
+// Remove ArticleSize model since we're using enum
 
 model Order {
   id          String      @id @default(cuid())
@@ -80,4 +75,14 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum Size {
+  XS
+  S
+  M
+  L
+  XL
+  XXL
+  XXXL
 }

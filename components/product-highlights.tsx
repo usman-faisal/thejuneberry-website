@@ -4,9 +4,6 @@ import ArticleList from '@/app/(store)/articles/article-list'
 
 export default async function ProductHighlights() {
   const articles = await prisma.article.findMany({
-    include: {
-      sizes: true,
-    },
     orderBy: {
       createdAt: 'desc',
     },

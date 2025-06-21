@@ -1,16 +1,14 @@
 'use client'
 
 import { useState } from "react";
-import { Prisma } from "@prisma/client"
+import { Article, Prisma } from "@prisma/client"
 import { Heart, ShoppingBag, Star } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image"
 
 export default function ArticleList({  articles
 }: {
-    articles: Prisma.ArticleGetPayload<{
-        include: { sizes: true };
-      }>[]
+    articles: Article[]
 }) {
     const [loadingImages, setLoadingImages] = useState<{ [key: string]: boolean }>({});
 
@@ -113,8 +111,8 @@ export default function ArticleList({  articles
             <div className="pt-1">
               <div className="flex flex-wrap gap-1">
                 {article.sizes.slice(0, 3).map(size => (
-                  <span key={size.id} className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                    {size.size}
+                  <span key={size} className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                    {size}
                   </span>
                 ))}
                 {article.sizes.length > 3 && (

@@ -66,7 +66,6 @@ export default async function ArticlePage({ params }: PageProps) {
   const article = await prisma.article.findUnique({
     where: { id },
     include: {
-      sizes: true,
       live: true
     }
   });

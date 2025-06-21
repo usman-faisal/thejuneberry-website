@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Search, Filter, X, ShoppingBag } from 'lucide-react'
-import { Prisma } from '@prisma/client'
+import { Article, Prisma } from '@prisma/client'
 import {
   Select,
   SelectTrigger,
@@ -15,9 +15,7 @@ import ArticleList from './article-list' // Your existing component
 import Pagination from '../../../components/ui/pagination' // The new pagination component
 
 interface ArticlesClientProps {
-  articles: Prisma.ArticleGetPayload<{
-    include: { sizes: true }
-  }>[]
+  articles: Article[]
   categories: string[]
   totalPages: number
   totalArticles: number

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useCart } from '@/lib/use-cart';
-import { Prisma } from '@prisma/client';
+import { Article, Prisma } from '@prisma/client';
 import { toast } from 'sonner';
 import {
   ImageGallery,
@@ -17,16 +17,11 @@ import {
 } from '@/components/article';
 
 interface ArticleClientProps {
-  article: Prisma.ArticleGetPayload<{
-    include: { sizes: true };
-  }> & {
-    images: string[];
-    videos: string[];
-  }
+  article: Article
 }
 
 export function ArticleClient({ article }: ArticleClientProps) {
-  const [selectedSize, setSelectedSize] = useState(article.sizes.length > 0 ? article.sizes[0].size : '');
+  const [selectedSize, setSelectedSize] = useState(article.sizes.length > 0 ? article.sizes[0] : '');
   const [quantity, setQuantity] = useState(1);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>('');

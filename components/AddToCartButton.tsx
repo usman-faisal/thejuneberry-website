@@ -4,14 +4,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/lib/use-cart';
 import { ShoppingCart, Check, Plus } from 'lucide-react';
-import { Prisma } from '@prisma/client';
+import { Article, Prisma, Size } from '@prisma/client';
 import { toast } from 'sonner';
 
 interface AddToCartButtonProps {
-  article: Prisma.ArticleGetPayload<{
-    include: { images: true, sizes: true };
-  }>;
-  selectedSize: Prisma.ArticleSizeGetPayload<{}>;
+  article: Article
+  selectedSize: Size;
   quantity?: number;
   showIcon?: boolean;
   className?: string;
@@ -37,7 +35,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
       name: article.name,
       price: article.price,
       image: article.images[0],
-      selectedSize: selectedSize.size,
+      selectedSize: selectedSize,
       quantity,
     });
 
@@ -45,7 +43,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
     setTimeout(() => setIsAdded(false), 2000);
   };
 
-  const itemInCart = isInCart(article.id, selectedSize.size);
+  const itemInCart = isInCart(article.id, selectedSize);
 
   if (!article.inStock) {
     return (

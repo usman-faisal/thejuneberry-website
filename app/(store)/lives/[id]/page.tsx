@@ -86,11 +86,7 @@ export default async function LiveDetailPage({ params }: PageProps) {
   const live = await prisma.live.findUnique({
     where: { id },
     include: {
-      articles: {
-        include: {
-          sizes: true
-        }
-      }
+      articles: true
     }
   });
 

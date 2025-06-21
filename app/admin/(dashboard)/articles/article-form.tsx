@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Live, Prisma } from '@prisma/client'
+import { Article, Live, Prisma } from '@prisma/client'
 import { createArticle, updateArticle } from '@/app/actions/articles'
 import { toast } from 'sonner'
 import { ArticleFormHeader } from '@/components/admin/ArticleFormHeader'
@@ -15,9 +15,7 @@ import { MediaUpload } from '@/components/admin/types'
 
 interface ArticleFormProps {
   onClose: () => void
-  editingArticle?: Prisma.ArticleGetPayload<{
-    include: { sizes: true };
-  }>
+  editingArticle?: Article
   lives: Live[]
 }
 
@@ -33,7 +31,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
     images: editingArticle?.images || [] as string[],
     videos: editingArticle?.videos || [] as string[],
     category: editingArticle?.category || '',
-    sizes: editingArticle?.sizes.map(sizeObj => sizeObj.size) || [],
+    sizes: editingArticle?.sizes || [],
     inStock: editingArticle?.inStock ?? true,
     liveId: editingArticle?.liveId || '',
     videoUrl: editingArticle?.videoUrl || ''
@@ -147,7 +145,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
   }
 
   const handleSizesChange = (sizes: string[]) => {
-    setFormData(prev => ({ ...prev, sizes }))
+    setFormData(prev => ({ ...prev, sizes: sizes as any }))
   }
 
   const handleImagesChange = (images: string[]) => {

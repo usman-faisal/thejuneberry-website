@@ -76,9 +76,6 @@ export default async function ArticlesPage({
 
   const articles = await prisma.article.findMany({
     where,
-    include: {
-      sizes: true,
-    },
     orderBy: {
       createdAt: 'desc',
     },

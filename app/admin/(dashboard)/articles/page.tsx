@@ -7,9 +7,6 @@ import { ShoppingBag, Package, DollarSign, TrendingUp } from 'lucide-react'
 
 export default async function AdminArticlesPage() {
   const articles = await prisma.article.findMany({
-    include: {
-      sizes: true,
-    },
     orderBy: {
       createdAt: 'desc'
     }

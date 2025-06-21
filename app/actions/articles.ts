@@ -3,7 +3,7 @@
 import cloudinary from '@/lib/cloudinary'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { Prisma } from '@prisma/client'
+import { Prisma, Size } from '@prisma/client'
 
 interface ArticleFormData {
   name: string
@@ -12,7 +12,7 @@ interface ArticleFormData {
   images: string[]  // Changed to string array
   videos: string[]  // Added videos array
   category: string
-  sizes: string[]
+  sizes: Size[]
   inStock: boolean
   liveId: string | null
   videoUrl?: string // Keep for Facebook embed
@@ -71,9 +71,6 @@ export async function getFilteredArticles(filters: ArticleFilters = {}) {
   const [articles, totalCount] = await Promise.all([
     prisma.article.findMany({
       where,
-      include: {
-        sizes: true
-      },
       orderBy: {
         createdAt: 'desc'
       },
@@ -129,15 +126,8 @@ export async function createArticle(data: ArticleFormData) {
         videoUrl: data.videoUrl,
         images: data.images, // Direct string array
         videos: data.videos || [], // Direct string array
-        sizes: {
-          create: data.sizes.map(size => ({
-            size: size.trim()
-          }))
-        }
+        sizes: data.sizes 
       },
-      include: {
-        sizes: true,
-      }
     })
 
     revalidatePath('/admin/articles')
@@ -171,13 +161,6 @@ export async function updateArticle(id: string, data: ArticleFormData) {
 
     // Start a transaction to ensure data consistency
     const article = await prisma.$transaction(async (tx) => {
-      // Delete existing sizes from database
-      await tx.articleSize.deleteMany({
-        where: { articleId: id }
-      })
-
-      console.log('Creating new images and videos:', { images: data.images, videos: data.videos })
-
       // Update article with new data
       return tx.article.update({
         where: { id },
@@ -191,15 +174,8 @@ export async function updateArticle(id: string, data: ArticleFormData) {
           videoUrl: data.videoUrl,
           images: data.images, // Direct string array
           videos: data.videos || [], // Direct string array
-          sizes: {
-            create: data.sizes.map(size => ({
-              size: size.trim()
-            }))
-          }
+          sizes: data.sizes 
         },
-        include: {
-          sizes: true,
-        }
       })
     })
 

@@ -24,12 +24,17 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  // Combine existing images and videos into a single media array
+  const existingMedia = [
+    ...(editingArticle?.images || []),
+    ...(editingArticle?.videos || [])
+  ]
+
   const [formData, setFormData] = useState({
     name: editingArticle?.name || '',
     description: editingArticle?.description || '',
     price: editingArticle?.price.toString() || '',
-    images: editingArticle?.images || [] as string[],
-    videos: editingArticle?.videos || [] as string[],
+    media: existingMedia, // Combined media array
     category: editingArticle?.category || '',
     sizes: editingArticle?.sizes || [],
     inStock: editingArticle?.inStock ?? true,
@@ -48,10 +53,17 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
       newErrors.price = 'Valid price is required'
     }
 
-    // Check both existing images and uploaded images
-    const totalImages = formData.images.length + mediaUploads.filter(u => u.type === 'image' && u.uploaded).length
-    if (totalImages === 0) {
-      newErrors.images = 'At least one image is required'
+    // Check both existing media and uploaded media
+    const totalMedia = formData.media.length + mediaUploads.filter(u => u.uploaded).length
+    if (totalMedia === 0) {
+      newErrors.media = 'At least one image or video is required'
+    }
+
+    // Validate that at least one image exists (images are required, videos are optional)
+    const existingImages = getImagesFromMedia(formData.media)
+    const uploadedImages = mediaUploads.filter(u => u.type === 'image' && u.uploaded)
+    if (existingImages.length === 0 && uploadedImages.length === 0) {
+      newErrors.media = 'At least one image is required'
     }
 
     // Validate Facebook embed URL format if provided
@@ -68,6 +80,25 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
     return facebookEmbedPattern.test(url)
   }
 
+  // Helper function to determine if a URL is a video
+  const isVideoUrl = (url: string): boolean => {
+    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.wmv', '.flv', '.mkv']
+    const lowerUrl = url.toLowerCase()
+    return videoExtensions.some(ext => lowerUrl.includes(ext)) || 
+           lowerUrl.includes('video') || 
+           lowerUrl.includes('.mp4')
+  }
+
+  // Helper function to separate images from media array
+  const getImagesFromMedia = (media: string[]): string[] => {
+    return media.filter(url => !isVideoUrl(url))
+  }
+
+  // Helper function to separate videos from media array
+  const getVideosFromMedia = (media: string[]): string[] => {
+    return media.filter(url => isVideoUrl(url))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -79,7 +110,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
     setIsSubmitting(true)
 
     try {
-      // Get uploaded media URLs
+      // Get uploaded media URLs separated by type
       const uploadedImages = mediaUploads
         .filter(u => u.type === 'image' && u.uploaded && u.url)
         .map(u => u.url!)
@@ -88,9 +119,13 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
         .filter(u => u.type === 'video' && u.uploaded && u.url)
         .map(u => u.url!)
 
-      // Combine existing and uploaded media
-      const allImages = [...formData.images, ...uploadedImages]
-      const allVideos = [...formData.videos, ...uploadedVideos]
+      // Separate existing media by type
+      const existingImages = getImagesFromMedia(formData.media)
+      const existingVideos = getVideosFromMedia(formData.media)
+
+      // Combine existing and uploaded media by type
+      const allImages = [...existingImages, ...uploadedImages]
+      const allVideos = [...existingVideos, ...uploadedVideos]
 
       console.log('Submitting with media:', { images: allImages, videos: allVideos })
 
@@ -148,12 +183,8 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
     setFormData(prev => ({ ...prev, sizes: sizes as any }))
   }
 
-  const handleImagesChange = (images: string[]) => {
-    setFormData(prev => ({ ...prev, images }))
-  }
-
-  const handleVideosChange = (videos: string[]) => {
-    setFormData(prev => ({ ...prev, videos }))
+  const handleMediaChange = (media: string[]) => {
+    setFormData(prev => ({ ...prev, media }))
   }
 
   return (
@@ -179,24 +210,12 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
           />
 
           <MediaUploadSection
-            type="image"
-            existingMedia={formData.images}
+            existingMedia={formData.media}
             mediaUploads={mediaUploads}
             errors={errors}
             isSubmitting={isSubmitting}
             onMediaUploadsChange={setMediaUploads}
-            onExistingMediaChange={handleImagesChange}
-            onErrorsChange={setErrors}
-          />
-
-          <MediaUploadSection
-            type="video"
-            existingMedia={formData.videos}
-            mediaUploads={mediaUploads}
-            errors={errors}
-            isSubmitting={isSubmitting}
-            onMediaUploadsChange={setMediaUploads}
-            onExistingMediaChange={handleVideosChange}
+            onExistingMediaChange={handleMediaChange}
             onErrorsChange={setErrors}
           />
 

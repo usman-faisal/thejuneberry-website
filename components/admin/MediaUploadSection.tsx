@@ -1,12 +1,11 @@
 import { useState, useRef } from 'react'
-import { Upload, X, ImageIcon, Loader2, AlertCircle, Video, Play } from 'lucide-react'
+import { Upload, X, ImageIcon, Loader2, AlertCircle, Video, Play, FileImage } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { CldUploadWidget, CldImage } from 'next-cloudinary'
 import { MediaUpload } from './types'
 
 interface MediaUploadSectionProps {
-  type: 'image' | 'video'
   existingMedia: string[]
   mediaUploads: MediaUpload[]
   errors: Record<string, string>
@@ -17,7 +16,6 @@ interface MediaUploadSectionProps {
 }
 
 export function MediaUploadSection({
-  type,
   existingMedia,
   mediaUploads,
   errors,
@@ -26,17 +24,17 @@ export function MediaUploadSection({
   onExistingMediaChange,
   onErrorsChange
 }: MediaUploadSectionProps) {
-  const isImage = type === 'image'
 
   const handleUploadSuccess = (result: any) => {
     if (result?.info) {
+      const isVideo = result.info.resource_type === 'video'
       const newUpload: MediaUpload = {
         id: result.info.public_id,
-        file: null as any, // We don't need the file object anymore
+        file: null as any,
         preview: result.info.secure_url,
         uploading: false,
         uploaded: true,
-        type,
+        type: isVideo ? 'video' : 'image',
         url: result.info.secure_url,
         public_id: result.info.public_id
       }
@@ -44,27 +42,27 @@ export function MediaUploadSection({
       onMediaUploadsChange([...mediaUploads, newUpload])
 
       // Clear errors if media is added
-      if (errors[`${type}s`]) {
-        onErrorsChange({ ...errors, [`${type}s`]: '' })
+      if (errors.media) {
+        onErrorsChange({ ...errors, media: '' })
       }
 
-      toast.success(`${type} uploaded successfully!`)
+      toast.success(`${isVideo ? 'Video' : 'Image'} uploaded successfully!`)
     }
   }
 
   const handleUploadError = (error: any) => {
     console.error('Upload error:', error)
-    toast.error(`Failed to upload ${type}`)
+    toast.error('Failed to upload media')
   }
 
   const addMediaUrl = () => {
-    const url = prompt(`Enter ${type} URL:`)?.trim()
+    const url = prompt('Enter image or video URL:')?.trim()
     if (url) {
       try {
         new URL(url)
         onExistingMediaChange([...existingMedia, url])
-        if (errors[`${type}s`]) {
-          onErrorsChange({ ...errors, [`${type}s`]: '' })
+        if (errors.media) {
+          onErrorsChange({ ...errors, media: '' })
         }
       } catch {
         toast.error('Please enter a valid URL')
@@ -80,25 +78,64 @@ export function MediaUploadSection({
     onExistingMediaChange(existingMedia.filter((_, i) => i !== index))
   }
 
-  const filteredUploads = mediaUploads.filter(u => u.type === type)
+  const isVideoUrl = (url: string): boolean => {
+    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.wmv', '.flv', '.mkv']
+    const lowerUrl = url.toLowerCase()
+    return videoExtensions.some(ext => lowerUrl.includes(ext)) || 
+           lowerUrl.includes('video') || 
+           lowerUrl.includes('.mp4')
+  }
+
+  const renderMediaPreview = (mediaUrl: string, isUpload: boolean = false, upload?: MediaUpload) => {
+    const isVideo = isUpload && upload ? upload.type === 'video' : isVideoUrl(mediaUrl)
+    
+    if (isVideo) {
+      return (
+        <>
+          <video
+            src={mediaUrl}
+            className={`w-full h-24 md:h-32 object-cover rounded-lg border ${
+              upload?.uploading ? 'opacity-50' : 'border-gray-200'
+            }`}
+            muted
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center rounded-lg pointer-events-none">
+            <Play size={16} className="text-white" />
+          </div>
+        </>
+      )
+    } else {
+      return (
+        <CldImage
+          src={mediaUrl}
+          alt="Media preview"
+          className={`w-full h-24 md:h-32 object-cover rounded-lg border ${
+            upload?.uploading ? 'opacity-50' : 'border-gray-200'
+          }`}
+          width={150}
+          height={150}
+        />
+      )
+    }
+  }
 
   return (
     <div>
       <label className="flex items-center text-sm font-medium text-gray-700 mb-4">
-        {isImage ? <ImageIcon size={16} className="mr-2 text-gray-400" /> : <Video size={16} className="mr-2 text-gray-400" />}
-        {type === 'image' ? 'Images' : 'Videos'} {isImage ? '*' : ''}
+        <FileImage size={16} className="mr-2 text-gray-400" />
+        Media (Images & Videos) *
       </label>
 
       {/* Upload Actions */}
       <div className="flex flex-wrap gap-2 md:gap-3 mb-4 md:mb-6">
         <CldUploadWidget
-          uploadPreset="ml_default" // You'll need to create this in Cloudinary
+          uploadPreset="ml_default"
           options={{
             multiple: true,
-            resourceType: isImage ? 'image' : 'video',
-            maxFileSize: isImage ? 10000000 : 100000000, // 10MB for images, 100MB for videos
+            resourceType: 'auto', // Allows both images and videos
+            maxFileSize: 100000000, // 100MB to accommodate videos
             sources: ['local', 'url', 'camera'],
-            folder: 'articles', // Optional: organize uploads in folders
+            folder: 'articles',
           }}
           onSuccess={handleUploadSuccess}
           onError={handleUploadError}
@@ -108,12 +145,10 @@ export function MediaUploadSection({
               type="button"
               onClick={() => open()}
               disabled={isSubmitting}
-              className={`flex items-center px-3 py-2 md:px-4 md:py-2 text-white rounded-lg hover:opacity-90 cursor-pointer transition-colors disabled:opacity-50 text-sm ${
-                isImage ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'
-              }`}
+              className="flex items-center px-3 py-2 md:px-4 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:opacity-90 cursor-pointer transition-colors disabled:opacity-50 text-sm"
             >
               <Upload size={14} className="mr-2" />
-              Upload {type === 'image' ? 'Images' : 'Videos'}
+              Upload Media
             </button>
           )}
         </CldUploadWidget>
@@ -124,8 +159,8 @@ export function MediaUploadSection({
           className="flex items-center px-3 py-2 md:px-4 md:py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
           disabled={isSubmitting}
         >
-          {isImage ? <ImageIcon size={14} className="mr-2" /> : <Video size={14} className="mr-2" />}
-          Add {type === 'image' ? 'Image' : 'Video'} URL
+          <FileImage size={14} className="mr-2" />
+          Add Media URL
         </button>
       </div>
 
@@ -133,27 +168,8 @@ export function MediaUploadSection({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
         {/* Existing Media */}
         {existingMedia.map((mediaUrl, index) => (
-          <div key={`existing-${type}-${index}`} className="relative group">
-            {isImage ? (
-              <CldImage
-                src={mediaUrl}
-                alt={`Product ${index + 1}`}
-                className="w-full h-24 md:h-32 object-cover rounded-lg border border-gray-200"
-                width={150}
-                height={150}
-              />
-            ) : (
-              <>
-                <video
-                  src={mediaUrl}
-                  className="w-full h-24 md:h-32 object-cover rounded-lg border border-gray-200"
-                  controls
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center rounded-lg pointer-events-none">
-                  <Play size={16} className="text-white" />
-                </div>
-              </>
-            )}
+          <div key={`existing-media-${index}`} className="relative group">
+            {renderMediaPreview(mediaUrl)}
             <button
               type="button"
               onClick={() => removeExistingMedia(index)}
@@ -166,32 +182,9 @@ export function MediaUploadSection({
         ))}
 
         {/* Media Upload Preview */}
-        {filteredUploads.map((upload) => (
+        {mediaUploads.map((upload) => (
           <div key={upload.id} className="relative group">
-            {isImage ? (
-              <CldImage
-                src={upload.public_id || upload.preview}
-                alt="Upload preview"
-                className={`w-full h-24 md:h-32 object-cover rounded-lg border ${
-                  upload.uploading ? 'opacity-50' : 'border-gray-200'
-                }`}
-                width={150}
-                height={150}
-              />
-            ) : (
-              <>
-                <video
-                  src={upload.url || upload.preview}
-                  className={`w-full h-24 md:h-32 object-cover rounded-lg border ${
-                    upload.uploading ? 'opacity-50' : 'border-gray-200'
-                  }`}
-                  muted
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center rounded-lg pointer-events-none">
-                  <Play size={16} className="text-white" />
-                </div>
-              </>
-            )}
+            {renderMediaPreview(upload.public_id || upload.preview, true, upload)}
 
             {/* Upload States */}
             {upload.uploading && (
@@ -232,10 +225,10 @@ export function MediaUploadSection({
         ))}
       </div>
 
-      {errors[`${type}s`] && (
+      {errors.media && (
         <p className="mt-2 text-sm text-red-600 flex items-center">
           <AlertCircle size={16} className="mr-1" />
-          {errors[`${type}s`]}
+          {errors.media}
         </p>
       )}
     </div>

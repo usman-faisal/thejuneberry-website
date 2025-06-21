@@ -63,12 +63,6 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
       newErrors.price = 'Valid price is required'
     }
 
-    // Check for images: existing images + uploaded images
-    const totalImages = formData.images.length + imageUploads.filter(upload => upload.uploaded).length
-    if (totalImages === 0) {
-      newErrors.images = 'At least one image is required'
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }

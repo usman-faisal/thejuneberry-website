@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/lib/use-cart';
 import { X, ShoppingCart, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -17,6 +18,10 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose }) => {
   const handleCheckout = () => {
     if (items.length === 0) return;
     
+    toast.loading('Redirecting to checkout...', {
+      duration: 2000,
+      position: 'top-center',
+    });
     onClose();
     window.location.href = '/checkout';
   };

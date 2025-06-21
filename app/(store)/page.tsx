@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Play, ShoppingBag, Sparkles, Heart, Star, Users } from 'lucide-react'
 import Image from 'next/image'
-import ProductHighlights from '../components/product-highlights'
+import ProductHighlights from '../../components/product-highlights'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {

@@ -63,7 +63,9 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
       newErrors.price = 'Valid price is required'
     }
 
-    if (formData.images.length === 0 && imageUploads.length === 0) {
+    // Check for images: existing images + uploaded images
+    const totalImages = formData.images.length + imageUploads.filter(upload => upload.uploaded).length
+    if (totalImages === 0) {
       newErrors.images = 'At least one image is required'
     }
 
@@ -128,6 +130,8 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
       return []
     }
 
+    console.log('Starting upload for', pendingUploads.length, 'images')
+
     // Set uploading state
     setImageUploads(prev => prev.map(u =>
       pendingUploads.includes(u) ? { ...u, uploading: true } : u
@@ -139,6 +143,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
         setImageUploads(prev => prev.map(u =>
           u.id === upload.id ? { ...u, uploading: false, uploaded: true, url, public_id } : u
         ))
+        console.log('Successfully uploaded image:', { url, public_id })
         return { url, public_id }
       } catch (error) {
         console.error('Error uploading image:', error)
@@ -155,8 +160,10 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
 
     try {
       const results = await Promise.all(uploadPromises)
+      console.log('All image uploads completed successfully:', results)
       return results
     } catch (error) {
+      console.error('Some images failed to upload:', error)
       toast.error('Some images failed to upload. Please try again.')
       throw error
     }
@@ -228,10 +235,13 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
       // Upload any pending images
       const newImageUrls = await uploadImages()
 
+      // Collect all images: existing ones + newly uploaded ones
       const allImages = [
         ...formData.images,
         ...newImageUrls
       ]
+
+      console.log('Submitting with images:', allImages)
 
       const payload = {
         name: formData.name.trim(),
@@ -280,8 +290,6 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
   }
-
-  const hasUnsavedUploads = imageUploads.some(upload => !upload.uploaded && !upload.error)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -418,17 +426,6 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
                 Add URL
               </button>
 
-              {hasUnsavedUploads && (
-                <button
-                  type="button"
-                  onClick={uploadImages}
-                  className="flex items-center px-3 py-2 md:px-4 md:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                  disabled={isSubmitting}
-                >
-                  <Plus size={14} className="mr-2" />
-                  Upload All
-                </button>
-              )}
             </div>
 
             {/* Images Grid */}
@@ -624,7 +621,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
           <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
             <button
               type="submit"
-              disabled={isSubmitting || hasUnsavedUploads}
+              disabled={isSubmitting}
               className="flex-1 bg-pink-600 text-white py-3 px-6 rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               {isSubmitting ? (
@@ -646,17 +643,6 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
             </button>
           </div>
 
-          {hasUnsavedUploads && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="flex items-start">
-                <AlertCircle className="text-yellow-600 mt-0.5 mr-2" size={16} />
-                <div className="text-sm text-yellow-800">
-                  <p className="font-medium">Unsaved Images</p>
-                  <p>You have uploaded images that haven't been saved yet. Please upload them before submitting the form.</p>
-                </div>
-              </div>
-            </div>
-          )}
         </form>
       </div>
     </div>

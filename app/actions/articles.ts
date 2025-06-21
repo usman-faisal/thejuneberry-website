@@ -92,6 +92,8 @@ async function deleteCloudinaryImages(images: Pick<ArticleImage, 'public_id'>[])
 
 export async function updateArticle(id: string, data: ArticleFormData) {
   try {
+    console.log('Updating article with data:', { id, images: data.images })
+    
     // Validate required fields
     if (!data.name?.trim()) {
       return { success: false, error: 'Article name is required' }
@@ -111,6 +113,8 @@ export async function updateArticle(id: string, data: ArticleFormData) {
       select: { id: true, public_id: true }
     })
 
+    console.log('Existing images to be deleted:', existingImages)
+
     // Start a transaction to ensure data consistency
     const article = await prisma.$transaction(async (tx) => {
       // Delete existing images from Cloudinary (don't wait for this)
@@ -125,6 +129,8 @@ export async function updateArticle(id: string, data: ArticleFormData) {
           where: { articleId: id }
         })
       ])
+
+      console.log('Creating new images:', data.images)
 
       // Update article with new data
       return tx.article.update({
@@ -154,6 +160,8 @@ export async function updateArticle(id: string, data: ArticleFormData) {
         }
       })
     })
+
+    console.log('Article updated successfully with images:', article.images)
 
     revalidatePath('/admin/articles')
     revalidatePath('/articles')

@@ -37,17 +37,18 @@ export const metadata: Metadata = {
 export default async function ArticlesPage({
   searchParams,
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     q?: string
     category?: string
     price?: string
     page?: string
-  }
+  }>
 }) {
-  const searchTerm = searchParams?.q || ''
-  const selectedCategory = searchParams?.category || ''
-  const priceRange = searchParams?.price || ''
-  const currentPage = Number(searchParams?.page) || 1
+  const params = await searchParams
+  const searchTerm = params?.q || ''
+  const selectedCategory = params?.category || ''
+  const priceRange = params?.price || ''
+  const currentPage = Number(params?.page) || 1
 
   const where: any = {
     inStock: true,

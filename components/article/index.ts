@@ -6,3 +6,4 @@ export { ActionButtons } from './ActionButtons';
 export { DeliveryInfo } from './DeliveryInfo';
 export { ProductFeatures } from './ProductFeatures';
 export { VideoModal } from './VideoModal'; 
+export { SizeChart } from './SizeChart';

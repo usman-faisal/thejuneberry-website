@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { ArticlesClient } from './client'
 import { Metadata } from 'next'
 
+const ITEMS_PER_PAGE = 12
+
 export const metadata: Metadata = {
   title: 'Pakistani Dresses Collection - Premium Fashion Online',
   description: 'Browse our exclusive collection of premium Pakistani dresses. Traditional and modern styles, high-quality fabrics, delivered across Pakistan. Find your perfect dress today.',
@@ -32,18 +34,68 @@ export const metadata: Metadata = {
 }
 
 
-export default async function ArticlesPage() {
+export default async function ArticlesPage({
+  searchParams,
+}: {
+  searchParams?: {
+    q?: string
+    category?: string
+    price?: string
+    page?: string
+  }
+}) {
+  const searchTerm = searchParams?.q || ''
+  const selectedCategory = searchParams?.category || ''
+  const priceRange = searchParams?.price || ''
+  const currentPage = Number(searchParams?.page) || 1
+
+  const where: any = {
+    inStock: true,
+  }
+
+  if (searchTerm) {
+    where.OR = [
+      { name: { contains: searchTerm, mode: 'insensitive' } },
+      { description: { contains: searchTerm, mode: 'insensitive' } },
+    ]
+  }
+
+  if (selectedCategory) {
+    where.category = selectedCategory
+  }
+
+  if (priceRange) {
+    const [min, max] = priceRange.split('-').map(Number)
+    if (max) {
+      where.price = { gte: min, lte: max }
+    } else {
+      where.price = { gte: min }
+    }
+  }
+
   const articles = await prisma.article.findMany({
+    where,
     include: {
       images: true,
-      sizes: true
+      sizes: true,
     },
     orderBy: {
-      createdAt: 'desc'
-    }
+      createdAt: 'desc',
+    },
+    take: ITEMS_PER_PAGE,
+    skip: (currentPage - 1) * ITEMS_PER_PAGE,
   })
 
-  const categories = [...new Set(articles.map(article => article.category).filter(Boolean))]
+  const totalArticles = await prisma.article.count({ where })
+
+  const categoriesData = await prisma.article.findMany({
+    select: { category: true },
+    distinct: ['category'],
+  })
+  const categories = categoriesData.map(c => c.category).filter(Boolean) as string[]
+
+  const totalPages = Math.ceil(totalArticles / ITEMS_PER_PAGE)
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -72,28 +124,33 @@ export default async function ArticlesPage() {
 
   return (
     <>
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(structuredData)
-      }}
-    />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData)
+        }}
+      />
 
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Simple Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-orange-500">
-            Our Collection
-          </h1>
-          <p className="text-gray-600">
-            Discover beautiful dresses for every occasion
-          </p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-orange-500">
+              Our Collection
+            </h1>
+            <p className="text-gray-600">
+              Discover beautiful dresses for every occasion
+            </p>
+          </div>
+
+          <ArticlesClient
+            articles={articles}
+            categories={categories}
+            totalPages={totalPages}
+            totalArticles={totalArticles}
+          />
         </div>
-
-        <ArticlesClient initialArticles={articles} categories={categories} />
       </div>
-    </div>
+
     </>
   )
 }

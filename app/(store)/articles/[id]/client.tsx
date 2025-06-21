@@ -8,6 +8,7 @@ import {
   ImageGallery,
   ProductHeader,
   SizeSelector,
+  SizeChart, // Add this import
   QuantitySelector,
   ActionButtons,
   DeliveryInfo,
@@ -93,12 +94,18 @@ export function ArticleClient({ article }: ArticleClientProps) {
             description={article.description || undefined}
           />
 
-          {/* Size Selection */}
-          <SizeSelector
-            sizes={article.sizes}
-            selectedSize={selectedSize}
-            onSizeSelect={setSelectedSize}
-          />
+          {/* Size Selection with Size Chart */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-gray-900">Size</span>
+              <SizeChart />
+            </div>
+            <SizeSelector
+              sizes={article.sizes}
+              selectedSize={selectedSize}
+              onSizeSelect={setSelectedSize}
+            />
+          </div>
 
           {/* Quantity Selection */}
           <QuantitySelector
@@ -133,4 +140,4 @@ export function ArticleClient({ article }: ArticleClientProps) {
       )}
     </>
   );
-} 
+}

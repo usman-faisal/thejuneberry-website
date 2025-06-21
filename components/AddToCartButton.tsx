@@ -36,7 +36,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
       id: article.id,
       name: article.name,
       price: article.price,
-      image: article.images[0].url,
+      image: article.images[0],
       selectedSize: selectedSize.size,
       quantity,
     });

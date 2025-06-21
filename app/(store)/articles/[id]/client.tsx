@@ -8,7 +8,7 @@ import {
   ImageGallery,
   ProductHeader,
   SizeSelector,
-  SizeChart, // Add this import
+  SizeChart,
   QuantitySelector,
   ActionButtons,
   DeliveryInfo,
@@ -18,28 +18,40 @@ import {
 
 interface ArticleClientProps {
   article: Prisma.ArticleGetPayload<{
-    include: { images: true, sizes: true };
-  }>
+    include: { sizes: true };
+  }> & {
+    images: string[];
+    videos: string[];
+  }
 }
 
 export function ArticleClient({ article }: ArticleClientProps) {
   const [selectedSize, setSelectedSize] = useState(article.sizes.length > 0 ? article.sizes[0].size : '');
   const [quantity, setQuantity] = useState(1);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>('');
 
   const { addToCart, isInCart, getItemQuantity } = useCart();
 
-  // Create media items array (images + video if exists)
+  // Create media items array (images + videos + facebook video if exists)
   const mediaItems = [
     ...article.images.map((image, index) => ({
       type: 'image' as const,
-      url: image.url,
-      index: index
+      url: image,
+      index: index,
+      isCloudinary: true
+    })),
+    ...article.videos.map((video, index) => ({
+      type: 'video' as const,
+      url: video,
+      index: article.images.length + index,
+      isCloudinary: true
     })),
     ...(article.videoUrl ? [{
       type: 'video' as const,
       url: article.videoUrl,
-      index: article.images.length
+      index: article.images.length + article.videos.length,
+      isCloudinary: false // Facebook embed
     }] : [])
   ];
 
@@ -53,7 +65,7 @@ export function ArticleClient({ article }: ArticleClientProps) {
       id: article.id,
       name: article.name,
       price: article.price,
-      image: article.images[0].url,
+      image: article.images[0],
       selectedSize: selectedSize,
       quantity,
     });
@@ -62,12 +74,14 @@ export function ArticleClient({ article }: ArticleClientProps) {
     toast.success('Added to cart successfully!');
   };
 
-  const handleVideoPlay = () => {
+  const handleVideoPlay = (videoUrl: string, isCloudinary: boolean) => {
+    setSelectedVideoUrl(videoUrl);
     setShowVideoModal(true);
   };
 
   const handleCloseVideoModal = () => {
     setShowVideoModal(false);
+    setSelectedVideoUrl('');
   };
 
   const currentItemQuantity = getItemQuantity(article.id, selectedSize);
@@ -86,7 +100,6 @@ export function ArticleClient({ article }: ArticleClientProps) {
 
         {/* Product Details */}
         <div className="space-y-8">
-          {/* Header */}
           <ProductHeader
             name={article.name}
             price={article.price}
@@ -94,20 +107,17 @@ export function ArticleClient({ article }: ArticleClientProps) {
             description={article.description || undefined}
           />
 
-          {/* Size Selection with Size Chart */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-gray-900">Size</span>
-              <SizeChart />
-            </div>
             <SizeSelector
               sizes={article.sizes}
               selectedSize={selectedSize}
               onSizeSelect={setSelectedSize}
             />
+            <div className="flex items-center justify-between mt-8">
+              <SizeChart />
+            </div>
           </div>
 
-          {/* Quantity Selection */}
           <QuantitySelector
             quantity={quantity}
             onQuantityChange={setQuantity}
@@ -115,29 +125,23 @@ export function ArticleClient({ article }: ArticleClientProps) {
             itemInCart={itemInCart}
           />
 
-          {/* Action Buttons */}
           <ActionButtons
             inStock={article.inStock}
             selectedSize={selectedSize}
             onAddToCart={handleAddToCart}
           />
 
-          {/* Delivery Information */}
           <DeliveryInfo />
-
-          {/* Additional Features */}
           <ProductFeatures />
         </div>
       </div>
 
       {/* Video Modal */}
-      {article.videoUrl && (
-        <VideoModal
-          isOpen={showVideoModal}
-          videoUrl={article.videoUrl}
-          onClose={handleCloseVideoModal}
-        />
-      )}
+      <VideoModal
+        isOpen={showVideoModal}
+        videoUrl={selectedVideoUrl}
+        onClose={handleCloseVideoModal}
+      />
     </>
   );
 }

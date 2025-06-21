@@ -9,7 +9,7 @@ import Image from "next/image"
 export default function ArticleList({  articles
 }: {
     articles: Prisma.ArticleGetPayload<{
-        include: { images: true, sizes: true };
+        include: { sizes: true };
       }>[]
 }) {
     const [loadingImages, setLoadingImages] = useState<{ [key: string]: boolean }>({});
@@ -45,7 +45,7 @@ export default function ArticleList({  articles
               )}
               
               <Image
-                src={article.images[0].url} 
+                src={article.images[0]} 
                 alt={article.name}
                 fill
                 className={`object-cover group-hover:scale-105 transition-all duration-300 ${

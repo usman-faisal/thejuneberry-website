@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url: `https://thejuneberry.vercel.app/articles/${id}`,
       type: 'article',
       images: article.images.map(img => ({
-        url: img.url,
+        url: img,
         width: 800,
         height: 800,
         alt: article.name,
@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       card: 'summary_large_image',
       title: `${article.name} - TheJuneBerry`,
       description: article.description || `Beautiful Pakistani dress`,
-      images: article.images.map(img => img.url),
+      images: article.images.map(img => img),
     },
     alternates: {
       canonical: `https://thejuneberry.vercel.app/articles/${id}`,
@@ -66,7 +66,6 @@ export default async function ArticlePage({ params }: PageProps) {
   const article = await prisma.article.findUnique({
     where: { id },
     include: {
-      images: true,
       sizes: true,
       live: true
     }
@@ -81,7 +80,7 @@ export default async function ArticlePage({ params }: PageProps) {
     "@type": "Product",
     "name": article.name,
     "description": article.description,
-    "image": article.images.map(img => img.url),
+    "image": article.images.map(img => img),
     "url": `https://thejuneberry.vercel.app/articles/${article.id}`,
     "sku": article.id,
     "category": article.category,

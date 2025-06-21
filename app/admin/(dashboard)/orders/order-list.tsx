@@ -66,9 +66,7 @@ interface OrderWithItems extends Order {
     article: {
       id: string
       name: string
-      images: Array<{
-        url: string
-      }>
+      images: string[]
     }
   }>
 }

@@ -8,7 +8,6 @@ import { ShoppingBag, Package, DollarSign, TrendingUp } from 'lucide-react'
 export default async function AdminArticlesPage() {
   const articles = await prisma.article.findMany({
     include: {
-      images: true,
       sizes: true,
     },
     orderBy: {
@@ -31,32 +30,6 @@ export default async function AdminArticlesPage() {
   async function handleDelete(id: string) {
     'use server'
     try {
-      // Get all images for this article
-      const imagesData = await prisma.image.findMany({
-        where: { articleId: id },
-        select: {
-          public_id: true
-        }
-      })
-      
-      // Delete from Cloudinary and database in parallel
-      await Promise.all([
-        // Delete images from Cloudinary
-        ...imagesData
-          .filter(image => image.public_id)
-          .map(image => cloudinary.uploader.destroy(image.public_id).catch(err => 
-            console.warn(`Failed to delete image ${image.public_id} from Cloudinary:`, err)
-          )),
-        // Delete related data from database
-        prisma.image.deleteMany({
-          where: { articleId: id }
-        }),
-        prisma.articleSize.deleteMany({
-          where: { articleId: id }
-        })
-      ])
-      
-      // Finally delete the article
       await prisma.article.delete({
         where: { id }
       })

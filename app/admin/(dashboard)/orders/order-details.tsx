@@ -53,9 +53,7 @@ interface OrderWithItems extends Order {
     article: {
       id: string
       name: string
-      images: Array<{
-        url: string
-      }>
+      images: string[]
     }
   }>
 }
@@ -264,7 +262,7 @@ export function OrderDetails({ order }: OrderDetailsProps) {
                     <div className="w-12 h-12 md:w-16 md:h-16 relative flex-shrink-0">
                       {item.article.images[0] ? (
                         <Image
-                          src={item.article.images[0].url}
+                          src={item.article.images[0]}
                           alt={item.article.name}
                           fill
                           className="object-cover rounded"

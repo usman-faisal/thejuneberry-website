@@ -88,7 +88,6 @@ export default async function LiveDetailPage({ params }: PageProps) {
     include: {
       articles: {
         include: {
-          images: true,
           sizes: true
         }
       }

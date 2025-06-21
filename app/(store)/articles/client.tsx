@@ -16,7 +16,7 @@ import Pagination from '../../../components/ui/pagination' // The new pagination
 
 interface ArticlesClientProps {
   articles: Prisma.ArticleGetPayload<{
-    include: { images: true; sizes: true }
+    include: { sizes: true }
   }>[]
   categories: string[]
   totalPages: number

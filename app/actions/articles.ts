@@ -5,23 +5,17 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { Prisma } from '@prisma/client'
 
-interface ArticleImage {
-  id?: string
-  url: string
-  public_id?: string
-  articleId?: string | null
-}
-
 interface ArticleFormData {
   name: string
   description: string
   price: number
-  images: ArticleImage[]
+  images: string[]  // Changed to string array
+  videos: string[]  // Added videos array
   category: string
   sizes: string[]
   inStock: boolean
   liveId: string | null
-  videoUrl?: string
+  videoUrl?: string // Keep for Facebook embed
 }
 
 export interface ArticleFilters {
@@ -78,7 +72,6 @@ export async function getFilteredArticles(filters: ArticleFilters = {}) {
     prisma.article.findMany({
       where,
       include: {
-        images: true,
         sizes: true
       },
       orderBy: {
@@ -133,12 +126,9 @@ export async function createArticle(data: ArticleFormData) {
         category: data.category?.trim() || null,
         inStock: data.inStock,
         liveId: data.liveId,
-        images: {
-          create: data.images.map(img => ({
-            url: img.url,
-            public_id: img.public_id || ''
-          }))
-        },
+        videoUrl: data.videoUrl,
+        images: data.images, // Direct string array
+        videos: data.videos || [], // Direct string array
         sizes: {
           create: data.sizes.map(size => ({
             size: size.trim()
@@ -146,7 +136,6 @@ export async function createArticle(data: ArticleFormData) {
         }
       },
       include: {
-        images: true,
         sizes: true,
       }
     })
@@ -163,24 +152,9 @@ export async function createArticle(data: ArticleFormData) {
   }
 }
 
-async function deleteCloudinaryImages(images: Pick<ArticleImage, 'public_id'>[]) {
-  const deletePromises = images
-    .filter(image => image.public_id)
-    .map(async (image) => {
-      try {
-        await cloudinary.uploader.destroy(image.public_id!)
-      } catch (error) {
-        console.warn(`Failed to delete image ${image.public_id} from Cloudinary:`, error)
-        // Don't throw here, continue with other deletions
-      }
-    })
-
-  await Promise.all(deletePromises)
-}
-
 export async function updateArticle(id: string, data: ArticleFormData) {
   try {
-    console.log('Updating article with data:', { id, images: data.images })
+    console.log('Updating article with data:', { id, images: data.images, videos: data.videos })
     
     // Validate required fields
     if (!data.name?.trim()) {
@@ -195,30 +169,14 @@ export async function updateArticle(id: string, data: ArticleFormData) {
       return { success: false, error: 'At least one image is required' }
     }
 
-    // Get existing images for cleanup
-    const existingImages = await prisma.image.findMany({
-      where: { articleId: id },
-      select: { id: true, public_id: true }
-    })
-
-    console.log('Existing images to be deleted:', existingImages)
-
     // Start a transaction to ensure data consistency
     const article = await prisma.$transaction(async (tx) => {
-      // Delete existing images from Cloudinary (don't wait for this)
-      deleteCloudinaryImages(existingImages).catch(console.error)
+      // Delete existing sizes from database
+      await tx.articleSize.deleteMany({
+        where: { articleId: id }
+      })
 
-      // Delete existing images and sizes from database
-      await Promise.all([
-        tx.image.deleteMany({
-          where: { articleId: id }
-        }),
-        tx.articleSize.deleteMany({
-          where: { articleId: id }
-        })
-      ])
-
-      console.log('Creating new images:', data.images)
+      console.log('Creating new images and videos:', { images: data.images, videos: data.videos })
 
       // Update article with new data
       return tx.article.update({
@@ -231,12 +189,8 @@ export async function updateArticle(id: string, data: ArticleFormData) {
           inStock: data.inStock,
           liveId: data.liveId,
           videoUrl: data.videoUrl,
-          images: {
-            create: data.images.map(img => ({
-              url: img.url,
-              public_id: img.public_id || ''
-            }))
-          },
+          images: data.images, // Direct string array
+          videos: data.videos || [], // Direct string array
           sizes: {
             create: data.sizes.map(size => ({
               size: size.trim()
@@ -244,13 +198,12 @@ export async function updateArticle(id: string, data: ArticleFormData) {
           }
         },
         include: {
-          images: true,
           sizes: true,
         }
       })
     })
 
-    console.log('Article updated successfully with images:', article.images)
+    console.log('Article updated successfully with images and videos:', { images: article.images, videos: article.videos })
 
     revalidatePath('/admin/articles')
     revalidatePath('/articles')

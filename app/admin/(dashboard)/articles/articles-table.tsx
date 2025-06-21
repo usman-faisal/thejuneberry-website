@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 
 interface ArticlesTableProps {
   articles: Prisma.ArticleGetPayload<{
-    include: { images: true, sizes: true };
+    include: {  sizes: true };
   }>[]
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>
   lives: Live[]
@@ -17,7 +17,7 @@ interface ArticlesTableProps {
 
 export function ArticlesTable({ articles, onDelete, lives }: ArticlesTableProps) {
   const [editingArticle, setEditingArticle] = useState<Prisma.ArticleGetPayload<{
-    include: { images: true, sizes: true };
+    include: {  sizes: true };
   }> | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [filteredArticles, setFilteredArticles] = useState(articles)
@@ -186,7 +186,7 @@ export function ArticlesTable({ articles, onDelete, lives }: ArticlesTableProps)
           <div className="block lg:hidden space-y-4">
             {filteredArticles.map((article) => {
               const images = article.images || []
-              const primaryImage = images[0]?.url
+              const primaryImage = images[0]
               const sizes = article.sizes.map(sizeObj => sizeObj.size).join(', ') || 'No sizes'
               const isDeleting = deletingId === article.id
               const associatedLive = lives.find(live => live.id === article.liveId)
@@ -327,7 +327,7 @@ export function ArticlesTable({ articles, onDelete, lives }: ArticlesTableProps)
                 <tbody className="bg-white divide-y divide-gray-100">
                   {filteredArticles.map((article) => {
                     const images = article.images || []
-                    const primaryImage = images[0]?.url
+                    const primaryImage = images[0]
                     const sizes = article.sizes.map(sizeObj => sizeObj.size).join(', ') || 'No sizes'
                     const isDeleting = deletingId === article.id
                     const associatedLive = lives.find(live => live.id === article.liveId)

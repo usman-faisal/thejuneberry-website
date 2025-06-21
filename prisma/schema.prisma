@@ -28,7 +28,8 @@ model Article {
   name        String
   description String?
   price       Float
-  images      Image[]
+  images      String[]
+  videos      String[]
   category    String?
   sizes       ArticleSize[]
   inStock     Boolean     @default(true)
@@ -79,12 +80,4 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
-}
-
-model Image {
-  id        String   @id @default(cuid())
-  url       String
-  public_id String
-  article   Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  articleId String?
 }

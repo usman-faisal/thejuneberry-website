@@ -32,11 +32,7 @@ export async function getOrders() {
       include: {
         items: {
           include: {
-            article: {
-              include: {
-                images: true
-              }
-            }
+            article: true
           }
         }
       },
@@ -58,11 +54,7 @@ export async function getOrder(id: string) {
       include: {
         items: {
           include: {
-            article: {
-              include: {
-                images: true
-              }
-            }
+            article: true
           }
         }
       }
@@ -87,11 +79,7 @@ export async function updateOrderStatus(id: string, status: OrderFormData['statu
       include: {
         items: {
           include: {
-            article: {
-              include: {
-                images: true
-              }
-            }
+            article: true
           }
         }
       }
@@ -153,11 +141,7 @@ export async function createOrder(data: OrderFormData) {
       include: {
         items: {
           include: {
-            article: {
-              include: {
-                images: true
-              }
-            }
+            article: true
           }
         }
       }
@@ -207,11 +191,7 @@ export async function cancelOrder(id: string, reason?: string) {
       include: {
         items: {
           include: {
-            article: {
-              include: {
-                images: true
-              }
-            }
+            article: true
           }
         }
       }
@@ -274,11 +254,7 @@ export async function duplicateOrder(id: string) {
       include: {
         items: {
           include: {
-            article: {
-              include: {
-                images: true
-              }
-            }
+            article: true
           }
         }
       }
@@ -317,11 +293,7 @@ export async function updateOrderItems(orderId: string, items: OrderItem[]) {
       include: {
         items: {
           include: {
-            article: {
-              include: {
-                images: true
-              }
-            }
+            article: true
           }
         }
       }

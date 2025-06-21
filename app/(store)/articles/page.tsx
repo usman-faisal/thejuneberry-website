@@ -77,7 +77,6 @@ export default async function ArticlesPage({
   const articles = await prisma.article.findMany({
     where,
     include: {
-      images: true,
       sizes: true,
     },
     orderBy: {
@@ -111,7 +110,7 @@ export default async function ArticlesPage({
         "position": index + 1,
         "name": article.name,
         "description": article.description,
-        "image": article.images[0]?.url,
+        "image": article.images[0],
         "url": `https://thejuneberry.vercel.app/articles/${article.id}`,
         "offers": {
           "@type": "Offer",

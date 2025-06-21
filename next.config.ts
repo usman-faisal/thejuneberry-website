@@ -15,6 +15,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: `/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/**`, // replace with your cloud name
       },
+      {
+        // facebook
+        protocol: 'https',
+        hostname: 'facebook.com',
+        port: '',
+        pathname: '/**'
+      }
     ]
   }
 };

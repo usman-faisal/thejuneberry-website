@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Plus, Upload, X, ImageIcon, Loader2, AlertCircle, Package, DollarSign, Tag } from 'lucide-react'
+import { Plus, Upload, X, ImageIcon, Loader2, AlertCircle, Package, DollarSign, Tag, Video } from 'lucide-react'
 import Image from 'next/image'
 import { Live, Prisma } from '@prisma/client'
 import { createArticle, updateArticle } from '@/app/actions/articles'
@@ -49,7 +49,8 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
     category: editingArticle?.category || '',
     sizes: editingArticle?.sizes.map(sizeObj => sizeObj.size) || [],
     inStock: editingArticle?.inStock ?? true,
-    liveId: editingArticle?.liveId || ''
+    liveId: editingArticle?.liveId || '',
+    videoUrl: editingArticle?.videoUrl || '' // Added video URL field
   })
 
   const validateForm = () => {
@@ -63,8 +64,18 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
       newErrors.price = 'Valid price is required'
     }
 
+    // Validate Facebook embed URL format if provided
+    if (formData.videoUrl && !isValidFacebookEmbedUrl(formData.videoUrl)) {
+      newErrors.videoUrl = 'Please enter a valid Facebook embed URL'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  const isValidFacebookEmbedUrl = (url: string): boolean => {
+    const facebookEmbedPattern = /^https:\/\/www\.facebook\.com\/plugins\/video\.php\?.*href=.*$/
+    return facebookEmbedPattern.test(url)
   }
 
   const handleImageUpload = async (file: File): Promise<{ url: string, public_id: string }> => {
@@ -246,6 +257,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
         sizes: formData.sizes,
         inStock: formData.inStock,
         liveId: formData.liveId || null,
+        videoUrl: formData.videoUrl.trim() || undefined, // Added video URL to payload
       }
 
       const result = editingArticle 
@@ -384,6 +396,34 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
                 placeholder="Describe your article..."
                 disabled={isSubmitting}
               />
+            </div>
+
+            {/* Facebook Video URL */}
+            <div>
+              <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                <Video size={16} className="mr-2 text-gray-400" />
+                Facebook Video Embed URL
+              </label>
+              <input
+                type="url"
+                name="videoUrl"
+                value={formData.videoUrl}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors ${
+                  errors.videoUrl ? 'border-red-300' : 'border-gray-300'
+                }`}
+                placeholder="https://www.facebook.com/plugins/video.php?height=476&href=..."
+                disabled={isSubmitting}
+              />
+              {errors.videoUrl && (
+                <p className="mt-1 text-sm text-red-600 flex items-center">
+                  <AlertCircle size={16} className="mr-1" />
+                  {errors.videoUrl}
+                </p>
+              )}
+              <p className="mt-1 text-xs text-gray-500">
+                Paste the Facebook embed URL to show a video in the product gallery
+              </p>
             </div>
           </div>
 

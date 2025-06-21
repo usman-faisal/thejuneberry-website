@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     siteName: 'TheJuneBerry',
     images: [
       {
-        url: '/images/og-image.jpg', // You'll need to create this
+        url: '/images/favicon.jpg', // You'll need to create this
         width: 1200,
         height: 630,
         alt: 'TheJuneBerry Premium Pakistani Fashion',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'TheJuneBerry - Premium Pakistani Dresses & Fashion',
     description: 'Discover authentic Pakistani fashion at TheJuneBerry. Premium dresses, live fashion shows, and exclusive collections.',
-    images: ['/images/og-image.jpg'],
+    images: ['/images/favicon.jpg'],
   },
   robots: {
     index: true,

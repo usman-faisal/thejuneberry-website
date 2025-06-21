@@ -3,6 +3,7 @@
 import cloudinary from '@/lib/cloudinary'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { Prisma } from '@prisma/client'
 
 interface ArticleImage {
   id?: string
@@ -20,6 +21,93 @@ interface ArticleFormData {
   sizes: string[]
   inStock: boolean
   liveId: string | null
+  videoUrl?: string
+}
+
+export interface ArticleFilters {
+  search?: string
+  category?: string
+  priceMin?: number
+  priceMax?: number
+  page?: number
+  limit?: number
+}
+
+export async function getFilteredArticles(filters: ArticleFilters = {}) {
+  const {
+    search,
+    category,
+    priceMin,
+    priceMax,
+    page = 1,
+    limit = 12
+  } = filters
+
+  // Build where clause
+  const where: Prisma.ArticleWhereInput = {
+    inStock: true, // Only show in-stock items
+    AND: [
+      // Search filter
+      search ? {
+        OR: [
+          { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
+          { description: { contains: search, mode: Prisma.QueryMode.insensitive } }
+        ]
+      } : {},
+      
+      // Category filter
+      category && category !== 'all' ? {
+        category: category
+      } : {},
+      
+      // Price range filter
+      (priceMin !== undefined || priceMax !== undefined) ? {
+        price: {
+          ...(priceMin !== undefined && { gte: priceMin }),
+          ...(priceMax !== undefined && { lte: priceMax })
+        }
+      } : {}
+    ].filter(condition => Object.keys(condition).length > 0)
+  }
+
+  // Calculate skip for pagination
+  const skip = (page - 1) * limit
+
+  // Get articles and total count
+  const [articles, totalCount] = await Promise.all([
+    prisma.article.findMany({
+      where,
+      include: {
+        images: true,
+        sizes: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      skip,
+      take: limit
+    }),
+    prisma.article.count({ where })
+  ])
+
+  return {
+    articles,
+    totalCount,
+    currentPage: page,
+    totalPages: Math.ceil(totalCount / limit),
+    hasNextPage: page < Math.ceil(totalCount / limit),
+    hasPrevPage: page > 1
+  }
+}
+
+export async function getArticleCategories() {
+  const categories = await prisma.article.findMany({
+    select: { category: true },
+    where: { category: { not: null } },
+    distinct: ['category']
+  })
+  
+  return categories.map(item => item.category).filter(Boolean)
 }
 
 export async function createArticle(data: ArticleFormData) {
@@ -142,6 +230,7 @@ export async function updateArticle(id: string, data: ArticleFormData) {
           category: data.category?.trim() || null,
           inStock: data.inStock,
           liveId: data.liveId,
+          videoUrl: data.videoUrl,
           images: {
             create: data.images.map(img => ({
               url: img.url,

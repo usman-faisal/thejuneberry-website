@@ -32,6 +32,7 @@ model Article {
   category    String?
   sizes       ArticleSize[]
   inStock     Boolean     @default(true)
+  videoUrl    String?     // Added this field for Facebook embed URLs
   liveId      String?
   live        Live?       @relation(fields: [liveId], references: [id])
   orderItems  OrderItem[]

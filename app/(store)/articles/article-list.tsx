@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from "react";
 import { Prisma } from "@prisma/client"
 import { Heart, ShoppingBag, Star } from "lucide-react";
 import Link from "next/link";
@@ -9,6 +12,16 @@ export default function ArticleList({  articles
         include: { images: true, sizes: true };
       }>[]
 }) {
+    const [loadingImages, setLoadingImages] = useState<{ [key: string]: boolean }>({});
+
+    const handleImageLoad = (articleId: string) => {
+        setLoadingImages(prev => ({ ...prev, [articleId]: false }));
+    };
+
+    const handleImageError = (articleId: string) => {
+        setLoadingImages(prev => ({ ...prev, [articleId]: false }));
+    };
+
     return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 lg:gap-6 ">
     {articles.map((article) => (
@@ -21,14 +34,30 @@ export default function ArticleList({  articles
         <div className="relative aspect-[3/4] bg-gray-50 overflow-hidden">
           {article.images && article.images.length > 0 ? (
             <>
+              {/* Loading Indicator */}
+              {loadingImages[article.id] !== false && (
+                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="w-6 h-6 border-2 border-pink-200 border-t-pink-600 rounded-full animate-spin"></div>
+                    <p className="text-xs text-gray-500 font-medium">Loading...</p>
+                  </div>
+                </div>
+              )}
+              
               <Image
                 src={article.images[0].url} 
                 alt={article.name}
                 fill
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                className={`object-cover group-hover:scale-105 transition-all duration-300 ${
+                  loadingImages[article.id] !== false ? 'opacity-0' : 'opacity-100'
+                }`}
+                onLoad={() => handleImageLoad(article.id)}
+                onError={() => handleImageError(article.id)}
+                onLoadStart={() => setLoadingImages(prev => ({ ...prev, [article.id]: true }))}
               />
+              
               {/* Multiple Images Indicator */}
-              {article.images.length > 1 && (
+              {article.images.length > 1 && loadingImages[article.id] === false && (
                 <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
                   +{article.images.length - 1}
                 </div>
@@ -40,14 +69,16 @@ export default function ArticleList({  articles
             </div>
           )}
           
-          {/* Wishlist Button */}
-          <button className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110">
-            <Heart className="text-gray-600 hover:text-red-500 transition-colors" size={14} />
-          </button>
+          {/* Wishlist Button - Only show when image is loaded */}
+          {loadingImages[article.id] === false && (
+            <button className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110">
+              <Heart className="text-gray-600 hover:text-red-500 transition-colors" size={14} />
+            </button>
+          )}
           
           {/* Stock Status Overlay */}
           {!article.inStock && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
               <span className="bg-red-500 text-white px-3 py-1.5 rounded-md font-medium text-xs">
                 OUT OF STOCK
               </span>

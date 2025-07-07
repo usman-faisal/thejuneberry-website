@@ -39,7 +39,8 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
     sizes: editingArticle?.sizes || [],
     inStock: editingArticle?.inStock ?? true,
     liveId: editingArticle?.liveId || '',
-    videoUrl: editingArticle?.videoUrl || ''
+    videoUrl: editingArticle?.videoUrl || '',
+    featured: editingArticle?.featured ?? false,
   })
 
   const validateForm = () => {
@@ -140,6 +141,7 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
         inStock: formData.inStock,
         liveId: formData.liveId || null,
         videoUrl: formData.videoUrl.trim() || undefined,
+        featured: formData.featured,
       }
 
       const result = editingArticle
@@ -240,6 +242,21 @@ export function ArticleForm({ onClose, editingArticle, lives }: ArticleFormProps
             isSubmitting={isSubmitting}
             onChange={handleChange}
           />
+
+          {/* Featured Checkbox */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="featured"
+              name="featured"
+              checked={formData.featured}
+              onChange={handleChange}
+              disabled={isSubmitting}
+            />
+            <label htmlFor="featured" className="text-sm font-medium">
+              Featured
+            </label>
+          </div>
 
           <FormActions
             isEditing={!!editingArticle}

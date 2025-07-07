@@ -33,6 +33,7 @@ model Article {
   category    String?
   sizes       Size[]      // Changed to Size enum array
   inStock     Boolean     @default(true)
+  featured    Boolean     @default(false)
   videoUrl    String?     // Added this field for Facebook embed URLs
   liveId      String?
   live        Live?       @relation(fields: [liveId], references: [id])

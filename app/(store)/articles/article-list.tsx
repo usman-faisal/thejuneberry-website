@@ -30,6 +30,18 @@ export default function ArticleList({  articles
       >
         {/* Image Container */}
         <div className="relative aspect-[3/4] bg-gray-50 overflow-hidden">
+          {/* Featured Badge */}
+          {article.featured && (
+            <div className="absolute top-2 left-2 z-20 bg-primary text-primary-foreground text-xs font-semibold px-2.5 py-0.5 rounded-md shadow">
+              FEATURED
+            </div>
+          )}
+          {/* Out of Stock Badge */}
+          {!article.inStock && (
+            <div className="absolute top-2 right-2 z-20 bg-destructive text-destructive-foreground text-xs font-semibold px-2.5 py-0.5 rounded-md shadow">
+              OUT OF STOCK
+            </div>
+          )}
           {article.images && article.images.length > 0 ? (
             <>
               {/* Loading Indicator */}

@@ -51,7 +51,7 @@ export default async function ArticlesPage({
   const currentPage = Number(params?.page) || 1
 
   const where: any = {
-    inStock: true,
+    // inStock: true,
   }
 
   if (searchTerm) {
@@ -76,9 +76,10 @@ export default async function ArticlesPage({
 
   const articles = await prisma.article.findMany({
     where,
-    orderBy: {
-      createdAt: 'desc',
-    },
+    orderBy: [
+      {createdAt: 'desc'},
+     { featured: 'desc'}
+    ],
     take: ITEMS_PER_PAGE,
     skip: (currentPage - 1) * ITEMS_PER_PAGE,
   })

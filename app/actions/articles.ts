@@ -16,6 +16,7 @@ interface ArticleFormData {
   inStock: boolean
   liveId: string | null
   videoUrl?: string // Keep for Facebook embed
+  featured: boolean;
 }
 
 export interface ArticleFilters {
@@ -174,7 +175,8 @@ export async function updateArticle(id: string, data: ArticleFormData) {
           videoUrl: data.videoUrl,
           images: data.images, // Direct string array
           videos: data.videos || [], // Direct string array
-          sizes: data.sizes 
+          sizes: data.sizes,
+          featured: data.featured || false,
         },
       })
     })

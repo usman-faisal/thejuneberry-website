@@ -146,7 +146,7 @@ export default function HomePage() {
               <div className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-2 sm:p-3 lg:p-4 transform rotate-1 hover:rotate-0 transition-transform duration-500">
                 <div className="relative h-80 sm:h-96 lg:h-[600px] w-full rounded-xl sm:rounded-2xl overflow-hidden">
                   <Image
-                    src="https://res.cloudinary.com/dmc17z9zc/image/upload/v1750580356/articles/30_77294a00-b03c-4f75-935c-743289fcd13d_oit36v.webp"
+                    src="https://res.cloudinary.com/dmc17z9zc/image/upload/v1751986481/IMG-20250625-WA0027_028fb9d8-c685-44b4-8d4f-bbbd88f2fe40_qqdfus.jpg"
                     alt="Beautiful traditional orange dress with floral embroidery"
                     width={1080}
                     height={1920}

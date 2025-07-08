@@ -146,9 +146,10 @@ export default function HomePage() {
               <div className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-2 sm:p-3 lg:p-4 transform rotate-1 hover:rotate-0 transition-transform duration-500">
                 <div className="relative h-80 sm:h-96 lg:h-[600px] w-full rounded-xl sm:rounded-2xl overflow-hidden">
                   <Image
-                    src="/images/hero-image.jpg"
+                    src="https://res.cloudinary.com/dmc17z9zc/image/upload/v1750580356/articles/30_77294a00-b03c-4f75-935c-743289fcd13d_oit36v.webp"
                     alt="Beautiful traditional orange dress with floral embroidery"
-                    fill
+                    width={1080}
+                    height={1920}
                     priority
                     className="object-cover object-center"
                   />

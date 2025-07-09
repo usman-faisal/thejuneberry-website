@@ -9,6 +9,7 @@ interface OrderItem {
   articleId: string;
   quantity: number;
   price: number;
+  size: string;
 }
 
 interface OrderFormData {
@@ -131,9 +132,10 @@ export async function createOrder(data: OrderFormData) {
           create: data.items.map(item => ({
             articleId: item.articleId,
             quantity: item.quantity,
-            price: item.price
+            price: item.price,
+            size: item.size
           }))
-        }
+        },
       },
       include: {
         items: {

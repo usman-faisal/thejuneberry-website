@@ -72,7 +72,8 @@ export function CheckoutForm({ cartItems, totalAmount }: CheckoutFormProps) {
         items: cartItems.map(cartItem => ({
           articleId: cartItem.id,
           quantity: cartItem.quantity,
-          price: cartItem.price
+          price: cartItem.price,
+          size: cartItem.selectedSize
         })),
         total: totalAmount,
         shippingCost: formData.country === 'Pakistan' ? 300 : 0,

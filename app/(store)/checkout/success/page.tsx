@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { CheckCircle, CreditCard, Smartphone, MessageCircle, ArrowRight } from 'lucide-react'
 import { Metadata } from 'next'
+import ShowToast from './show-toast'
 
 export const metadata: Metadata = {
   title: 'Order Confirmed - Thank You!',
@@ -22,7 +23,7 @@ export default async function CheckoutSuccessPage() {
       <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
         <div className="w-full max-w-lg">
           {/* Success Header */}
-          <div className="text-center mb-8">
+          {/* <div className="text-center mb-8">
             <div className="relative mb-6">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-12 h-12 text-green-600" />
@@ -37,7 +38,7 @@ export default async function CheckoutSuccessPage() {
             <p className="text-gray-600 text-sm md:text-base leading-relaxed">
               Thank you for your order! We'll contact you soon via WhatsApp to confirm and arrange delivery.
             </p>
-          </div>
+          </div> */}
 
           {/* Tax Warning - More Prominent */}
           <div className="bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-400 rounded-lg p-4 mb-6">

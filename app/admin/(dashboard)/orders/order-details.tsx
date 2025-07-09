@@ -50,6 +50,7 @@ interface OrderWithItems extends Order {
     id: string
     quantity: number
     price: number
+    size: string | null
     article: {
       id: string
       name: string
@@ -277,6 +278,9 @@ export function OrderDetails({ order }: OrderDetailsProps) {
                       <h3 className="font-medium text-sm md:text-base truncate">{item.article.name}</h3>
                       <p className="text-xs md:text-sm text-gray-500">
                         Qty: {item.quantity} × Rs. {item.price.toFixed(2)}
+                        {item.size && (
+                          <span className="ml-2">| <span className="font-semibold">Size:</span> {item.size}</span>
+                        )}
                       </p>
                     </div>
                     <div className="text-right">

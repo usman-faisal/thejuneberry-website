@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Package, Truck, Shield, Phone } from 'lucide-react';
@@ -38,6 +38,7 @@ export function CheckoutForm({ cartItems, totalAmount }: CheckoutFormProps) {
     postalCode: '',
     country: 'Pakistan'
   });
+  const submitting = useRef(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -48,6 +49,8 @@ export function CheckoutForm({ cartItems, totalAmount }: CheckoutFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting.current) return; // Prevent double submit
+    submitting.current = true;
     setLoading(true);
 
     try {
@@ -94,6 +97,7 @@ export function CheckoutForm({ cartItems, totalAmount }: CheckoutFormProps) {
       toast.error('Error placing order. Please try again.');
     } finally {
       setLoading(false);
+      submitting.current = false;
     }
   };
 
